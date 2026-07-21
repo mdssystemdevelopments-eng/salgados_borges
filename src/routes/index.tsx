@@ -1026,6 +1026,7 @@ function CartDrawer({
   onQty: (id: string, delta: number) => void;
   onRemove: (id: string) => void;
 }) {
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [form, setForm] = useState({ nome: "", telefone: "", obs: "" });
 
   const buildMessage = () => {
@@ -1048,10 +1049,17 @@ function CartDrawer({
     return lines.join("\n");
   };
 
-  const send = () => {
+  const send = (e: React.FormEvent) => {
+    e.preventDefault();
     if (items.length === 0) return;
+    if (!form.nome.trim() || !form.telefone.trim()) return;
     window.open(waLink(whatsapp, buildMessage()), "_blank");
+    setCheckoutOpen(false);
   };
+
+  useEffect(() => {
+    if (!open) setCheckoutOpen(false);
+  }, [open]);
 
   return (
     <>
@@ -1133,42 +1141,89 @@ function CartDrawer({
 
         {items.length > 0 ? (
           <div className="border-t border-border p-6 space-y-4 bg-background/50">
-            <input
-              placeholder="Seu nome"
-              value={form.nome}
-              onChange={(e) => setForm({ ...form, nome: e.target.value })}
-              className="w-full field-outline bg-background/50 px-3 py-2.5 text-sm focus:border-gold outline-none"
-            />
-            <input
-              placeholder="Telefone com DDD"
-              value={form.telefone}
-              onChange={(e) => setForm({ ...form, telefone: e.target.value })}
-              className="w-full field-outline bg-background/50 px-3 py-2.5 text-sm focus:border-gold outline-none"
-            />
-            <textarea
-              placeholder="Observações (opcional)"
-              rows={2}
-              value={form.obs}
-              onChange={(e) => setForm({ ...form, obs: e.target.value })}
-              className="w-full field-outline bg-background/50 px-3 py-2.5 text-sm focus:border-gold outline-none resize-none"
-            />
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between">
               <span className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Total estimado</span>
               <span className="font-price text-3xl text-gold">{BRL.format(total)}</span>
             </div>
             <button
-              onClick={send}
+              type="button"
+              onClick={() => setCheckoutOpen(true)}
               className="w-full flex items-center justify-center gap-2 rounded-full bg-gold-gradient text-primary-foreground py-3.5 text-base uppercase tracking-[0.18em] font-semibold shadow-gold-glow hover:shadow-gold transition-all"
             >
               <WhatsIcon className="h-4 w-4" />
               Finalizar no WhatsApp
             </button>
-            <p className="text-xs text-center text-muted-foreground tracking-wider">
-              Você será redirecionado para o WhatsApp com a mensagem já preenchida.
-            </p>
           </div>
         ) : null}
       </aside>
+
+      {checkoutOpen ? (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label="Fechar"
+            onClick={() => setCheckoutOpen(false)}
+          />
+          <form
+            onSubmit={send}
+            className="relative z-10 w-full max-w-md rounded-t-xl border border-gold/40 bg-background p-6 sm:rounded-xl space-y-4"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-display text-2xl text-gold-gradient">Finalizar pedido</h3>
+              <button
+                type="button"
+                onClick={() => setCheckoutOpen(false)}
+                className="text-muted-foreground hover:text-gold"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-sm text-foreground">
+              Preencha seus dados para enviar o pedido pelo WhatsApp.
+            </p>
+            <label className="block space-y-1.5">
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Nome</span>
+              <input
+                required
+                autoFocus
+                value={form.nome}
+                onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                className="w-full field-outline bg-background/50 px-3 py-2.5 text-sm focus:border-gold outline-none"
+                placeholder="Seu nome completo"
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Telefone</span>
+              <input
+                required
+                value={form.telefone}
+                onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+                className="w-full field-outline bg-background/50 px-3 py-2.5 text-sm focus:border-gold outline-none"
+                placeholder="Telefone com DDD"
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Observações</span>
+              <textarea
+                rows={3}
+                value={form.obs}
+                onChange={(e) => setForm({ ...form, obs: e.target.value })}
+                className="w-full field-outline bg-background/50 px-3 py-2.5 text-sm focus:border-gold outline-none resize-none"
+                placeholder="Opcional"
+              />
+            </label>
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2 rounded-full bg-gold-gradient text-primary-foreground py-3.5 text-base uppercase tracking-[0.18em] font-semibold shadow-gold-glow hover:shadow-gold transition-all"
+            >
+              <WhatsIcon className="h-4 w-4" />
+              Enviar no WhatsApp
+            </button>
+          </form>
+        </div>
+      ) : null}
     </>
   );
 }
