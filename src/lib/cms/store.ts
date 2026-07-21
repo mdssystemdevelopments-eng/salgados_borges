@@ -1,7 +1,15 @@
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import path from "node:path";
 import { createSeedCms } from "./seed";
+import { withNormalizedSettings } from "./sections";
 import type { CmsData } from "./types";
+
+function normalizeCms(data: CmsData): CmsData {
+  return {
+    ...data,
+    settings: withNormalizedSettings(data.settings),
+  };
+}
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const CMS_FILE = path.join(DATA_DIR, "cms.json");
@@ -23,15 +31,15 @@ async function ensureDataFile(): Promise<void> {
 async function readCmsFromFile(): Promise<CmsData> {
   await ensureDataFile();
   const raw = await readFile(CMS_FILE, "utf-8");
-  return JSON.parse(raw) as CmsData;
+  return normalizeCms(JSON.parse(raw) as CmsData);
 }
 
 async function writeCmsToFile(data: CmsData): Promise<CmsData> {
   await ensureDataFile();
-  const next: CmsData = {
+  const next: CmsData = normalizeCms({
     ...data,
     updatedAt: new Date().toISOString(),
-  };
+  });
   await writeFile(CMS_FILE, JSON.stringify(next, null, 2), "utf-8");
   return next;
 }
@@ -81,15 +89,15 @@ async function readCmsFromDb(): Promise<CmsData> {
   return withPg(async (client) => {
     await ensureCmsTable(client);
     const result = await client.query("SELECT data FROM cms_store WHERE id = 1");
-    return result.rows[0].data as CmsData;
+    return normalizeCms(result.rows[0].data as CmsData);
   });
 }
 
 async function writeCmsToDb(data: CmsData): Promise<CmsData> {
-  const next: CmsData = {
+  const next: CmsData = normalizeCms({
     ...data,
     updatedAt: new Date().toISOString(),
-  };
+  });
   return withPg(async (client) => {
     await ensureCmsTable(client);
     await client.query(

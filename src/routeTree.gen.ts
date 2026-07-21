@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as CmsMediaIdRouteImport } from './routes/cms-media/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,16 +35,23 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRoute,
 } as any)
+const CmsMediaIdRoute = CmsMediaIdRouteImport.update({
+  id: '/cms-media/$id',
+  path: '/cms-media/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/cms-media/$id': typeof CmsMediaIdRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/login': typeof AdminLoginRoute
+  '/cms-media/$id': typeof CmsMediaIdRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -51,19 +59,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/cms-media/$id': typeof CmsMediaIdRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/admin/login' | '/admin/'
+  fullPaths: '/' | '/admin' | '/admin/login' | '/cms-media/$id' | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin/login' | '/admin'
-  id: '__root__' | '/' | '/admin' | '/admin/login' | '/admin/'
+  to: '/' | '/admin/login' | '/cms-media/$id' | '/admin'
+  id:
+    '__root__' | '/' | '/admin' | '/admin/login' | '/cms-media/$id' | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  CmsMediaIdRoute: typeof CmsMediaIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -96,6 +107,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/cms-media/$id': {
+      id: '/cms-media/$id'
+      path: '/cms-media/$id'
+      fullPath: '/cms-media/$id'
+      preLoaderRoute: typeof CmsMediaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -114,6 +132,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  CmsMediaIdRoute: CmsMediaIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

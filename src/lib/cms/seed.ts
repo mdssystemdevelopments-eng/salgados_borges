@@ -106,6 +106,17 @@ export function createSeedCms(): CmsData {
         contact: true,
         floatingWhatsapp: true,
       },
+      sectionOrder: [
+        "hero",
+        "products",
+        "about",
+        "howItWorks",
+        "features",
+        "gallery",
+        "testimonials",
+        "faq",
+        "contact",
+      ],
     },
     categories: [
       { id: "mini", name: "Mini salgados", visible: true, order: 0 },

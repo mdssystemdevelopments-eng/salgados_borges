@@ -60,6 +60,17 @@ export type CmsFeature = {
   order: number;
 };
 
+export type CmsPageSection =
+  | "hero"
+  | "about"
+  | "products"
+  | "howItWorks"
+  | "features"
+  | "gallery"
+  | "testimonials"
+  | "faq"
+  | "contact";
+
 export type CmsSectionsVisibility = {
   hero: boolean;
   about: boolean;
@@ -153,6 +164,8 @@ export type CmsSettings = {
   ogTitle: string;
   ogDescription: string;
   sections: CmsSectionsVisibility;
+  /** Ordem das secoes no site (exceto botao flutuante). */
+  sectionOrder: CmsPageSection[];
 };
 
 export type CmsData = {

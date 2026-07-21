@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
 import { getPublicCms } from "@/lib/cms/api";
-import type { CmsData } from "@/lib/cms/types";
+import { NAV_SECTION_META, normalizeSectionOrder } from "@/lib/cms/sections";
+import type { CmsData, CmsPageSection } from "@/lib/cms/types";
 
 export const Route = createFileRoute("/")({
   loader: () => getPublicCms(),
@@ -27,6 +28,7 @@ function SalgadosBorgesPage() {
   const cms = Route.useLoaderData() as CmsData;
   const { content, settings } = cms;
   const sections = settings.sections;
+  const sectionOrder = normalizeSectionOrder(settings.sectionOrder);
 
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -97,64 +99,93 @@ function SalgadosBorgesPage() {
         brandName={content.brandName}
         logoUrl={content.logoUrl}
         sections={sections}
+        sectionOrder={sectionOrder}
         cartCount={itemCount}
         onOpenCart={() => setCartOpen(true)}
       />
 
-      {sections.hero ? (
-        <Hero
-          content={content}
-          whatsapp={settings.whatsapp}
-          onOrder={() => scrollTo("produtos")}
-          onMenu={() => scrollTo("produtos")}
-        />
-      ) : null}
+      {sectionOrder.map((key) => {
+        if (!sections[key]) return null;
 
-      {sections.about ? <Sobre about={content.about} brandName={content.brandName} /> : null}
+        if (key === "hero") {
+          return (
+            <Hero
+              key={key}
+              content={content}
+              whatsapp={settings.whatsapp}
+              onOrder={() => scrollTo("produtos")}
+              onMenu={() => scrollTo("produtos")}
+            />
+          );
+        }
 
-      {sections.products ? (
-        <Produtos
-          section={content.productsSection}
-          products={filtered}
-          categories={categories}
-          category={category}
-          onCategory={setCategory}
-          onAdd={addToCart}
-        />
-      ) : null}
+        if (key === "about") {
+          return <Sobre key={key} about={content.about} brandName={content.brandName} />;
+        }
 
-      {sections.howItWorks ? (
-        <ComoFunciona section={content.howItWorks} steps={cms.steps} />
-      ) : null}
+        if (key === "products") {
+          return (
+            <Produtos
+              key={key}
+              section={content.productsSection}
+              products={filtered}
+              categories={categories}
+              category={category}
+              onCategory={setCategory}
+              onAdd={addToCart}
+            />
+          );
+        }
 
-      {sections.features ? (
-        <Diferenciais section={content.features} features={cms.features} />
-      ) : null}
+        if (key === "howItWorks") {
+          return <ComoFunciona key={key} section={content.howItWorks} steps={cms.steps} />;
+        }
 
-      {sections.gallery ? (
-        <Galeria section={content.gallery} items={cms.gallery} onOpen={setLightbox} />
-      ) : null}
+        if (key === "features") {
+          return <Diferenciais key={key} section={content.features} features={cms.features} />;
+        }
 
-      {sections.testimonials ? (
-        <Avaliacoes section={content.testimonials} testimonials={cms.testimonials} />
-      ) : null}
+        if (key === "gallery") {
+          return (
+            <Galeria key={key} section={content.gallery} items={cms.gallery} onOpen={setLightbox} />
+          );
+        }
 
-      {sections.faq ? (
-        <Faq
-          section={content.faq}
-          items={cms.faq}
-          openIndex={openFaq}
-          onToggle={(i) => setOpenFaq(openFaq === i ? null : i)}
-        />
-      ) : null}
+        if (key === "testimonials") {
+          return (
+            <Avaliacoes
+              key={key}
+              section={content.testimonials}
+              testimonials={cms.testimonials}
+            />
+          );
+        }
 
-      {sections.contact ? (
-        <Contato
-          section={content.contact}
-          settings={settings}
-          brandName={content.brandName}
-        />
-      ) : null}
+        if (key === "faq") {
+          return (
+            <Faq
+              key={key}
+              section={content.faq}
+              items={cms.faq}
+              openIndex={openFaq}
+              onToggle={(i) => setOpenFaq(openFaq === i ? null : i)}
+            />
+          );
+        }
+
+        if (key === "contact") {
+          return (
+            <Contato
+              key={key}
+              section={content.contact}
+              settings={settings}
+              brandName={content.brandName}
+            />
+          );
+        }
+
+        return null;
+      })}
 
       <Footer content={content} />
 
@@ -192,12 +223,14 @@ function Header({
   brandName,
   logoUrl,
   sections,
+  sectionOrder,
   cartCount,
   onOpenCart,
 }: {
   brandName: string;
   logoUrl: string;
   sections: CmsData["settings"]["sections"];
+  sectionOrder: CmsPageSection[];
   cartCount: number;
   onOpenCart: () => void;
 }) {
@@ -211,13 +244,13 @@ function Header({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const links = [
-    sections.about ? { href: "sobre", label: "Sobre" } : null,
-    sections.products ? { href: "produtos", label: "Cardápio" } : null,
-    sections.howItWorks ? { href: "como-funciona", label: "Como funciona" } : null,
-    sections.gallery ? { href: "galeria", label: "Galeria" } : null,
-    sections.contact ? { href: "contato", label: "Contato" } : null,
-  ].filter(Boolean) as { href: string; label: string }[];
+  const links = sectionOrder
+    .map((key) => {
+      if (!sections[key]) return null;
+      const meta = NAV_SECTION_META[key];
+      return meta || null;
+    })
+    .filter(Boolean) as { href: string; label: string }[];
 
   return (
     <header

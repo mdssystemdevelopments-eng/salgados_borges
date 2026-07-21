@@ -20,12 +20,14 @@ import type {
   CmsFeature,
   CmsFaqItem,
   CmsGalleryItem,
+  CmsPageSection,
   CmsProduct,
   CmsCategory,
   CmsSettings,
   CmsStep,
   CmsTestimonial,
 } from "@/lib/cms/types";
+import { normalizeSectionOrder, SECTION_LABELS } from "@/lib/cms/sections";
 import {
   AdminButton,
   AdminField,
@@ -60,7 +62,7 @@ const NAV: { id: SectionId; label: string }[] = [
   { id: "features", label: "Diferenciais" },
   { id: "content", label: "Textos & Hero" },
   { id: "settings", label: "Contato & SEO" },
-  { id: "visibility", label: "Mostrar / Ocultar" },
+  { id: "visibility", label: "Ordem & Visibilidade" },
 ];
 
 export function CmsPanel({ initial }: { initial: CmsData }) {
@@ -1295,45 +1297,100 @@ function VisibilitySection({
   const [form, setForm] = useState(settings);
   useEffect(() => setForm(settings), [settings]);
 
-  const labels: Record<keyof CmsSettings["sections"], string> = {
-    hero: "Hero",
-    about: "Sobre",
-    products: "Cardápio / Produtos",
-    howItWorks: "Como funciona",
-    features: "Diferenciais",
-    gallery: "Galeria",
-    testimonials: "Depoimentos",
-    faq: "FAQ",
-    contact: "Contato",
-    floatingWhatsapp: "Botão flutuante WhatsApp",
+  const order = normalizeSectionOrder(form.sectionOrder);
+
+  const moveSection = (id: CmsPageSection, direction: -1 | 1) => {
+    const index = order.indexOf(id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= order.length) return;
+    const next = [...order];
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item);
+    setForm({ ...form, sectionOrder: next });
   };
 
   return (
-    <div className="mx-auto max-w-xl space-y-3 rounded-lg border border-gold/35 bg-surface p-5">
-      <p className="mb-4 text-sm text-muted-foreground">
-        Ligue ou desligue seções inteiras do site sem apagar o conteúdo.
-      </p>
-      {(Object.keys(labels) as (keyof CmsSettings["sections"])[]).map((key) => (
-        <label
-          key={key}
-          className="flex items-center justify-between gap-4 rounded-md border border-gold/35 px-4 py-3"
-        >
-          <span className="text-sm">{labels[key]}</span>
+    <div className="mx-auto max-w-xl space-y-6">
+      <div className="space-y-3 rounded-lg border border-gold/35 bg-surface p-5">
+        <h2 className="font-display text-2xl">Ordem das seções</h2>
+        <p className="text-sm text-muted-foreground">
+          Defina a ordem em que as seções aparecem no site. Use Subir e Descer.
+        </p>
+        <div className="divide-y divide-border overflow-hidden rounded-lg border border-gold/35">
+          {order.map((key, index) => (
+            <div
+              key={key}
+              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <div className="font-medium">{SECTION_LABELS[key]}</div>
+                <div className="text-xs text-muted-foreground">
+                  {form.sections[key] ? "Visível" : "Oculta"} · posição {index + 1}
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <AdminButton
+                  type="button"
+                  variant="ghost"
+                  disabled={busy || index === 0}
+                  onClick={() => moveSection(key, -1)}
+                >
+                  Subir
+                </AdminButton>
+                <AdminButton
+                  type="button"
+                  variant="ghost"
+                  disabled={busy || index === order.length - 1}
+                  onClick={() => moveSection(key, 1)}
+                >
+                  Descer
+                </AdminButton>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-gold/35 bg-surface p-5">
+        <h2 className="font-display text-2xl">Mostrar / ocultar</h2>
+        <p className="mb-2 text-sm text-muted-foreground">
+          Ligue ou desligue seções inteiras do site sem apagar o conteúdo.
+        </p>
+        {order.map((key) => (
+          <label
+            key={key}
+            className="flex items-center justify-between gap-4 rounded-md border border-gold/35 px-4 py-3"
+          >
+            <span className="text-sm">{SECTION_LABELS[key]}</span>
+            <input
+              type="checkbox"
+              checked={form.sections[key]}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  sections: { ...form.sections, [key]: e.target.checked },
+                })
+              }
+            />
+          </label>
+        ))}
+        <label className="flex items-center justify-between gap-4 rounded-md border border-gold/35 px-4 py-3">
+          <span className="text-sm">Botão flutuante WhatsApp</span>
           <input
             type="checkbox"
-            checked={form.sections[key]}
+            checked={form.sections.floatingWhatsapp}
             onChange={(e) =>
               setForm({
                 ...form,
-                sections: { ...form.sections, [key]: e.target.checked },
+                sections: { ...form.sections, floatingWhatsapp: e.target.checked },
               })
             }
           />
         </label>
-      ))}
-      <AdminButton type="button" disabled={busy} onClick={() => onSave(form)} className="mt-4">
-        Salvar visibilidade
-      </AdminButton>
+        <AdminButton type="button" disabled={busy} onClick={() => onSave(form)} className="mt-4">
+          Salvar ordem e visibilidade
+        </AdminButton>
+      </div>
     </div>
   );
 }

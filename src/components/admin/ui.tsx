@@ -61,6 +61,19 @@ export function AdminButton({
   );
 }
 
+async function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Nao foi possivel ler o arquivo"));
+    reader.readAsDataURL(file);
+  });
+
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) throw new Error("Arquivo invalido");
+  return { mimeType: match[1] || file.type || "image/jpeg", base64: match[2] };
+}
+
 export function ImageUploadField({
   label,
   value,
@@ -76,29 +89,29 @@ export function ImageUploadField({
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Imagem maior que 5MB");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      const buffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      let binary = "";
-      bytes.forEach((b) => {
-        binary += String.fromCharCode(b);
-      });
-      const base64 = btoa(binary);
+      const { base64, mimeType } = await fileToBase64(file);
       const result = await uploadCmsImage({
-        data: { filename: file.name, base64, mimeType: file.type || "image/jpeg" },
+        data: { filename: file.name, base64, mimeType },
       });
       onChange(result.url);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Falha no upload");
+      const msg = e instanceof Error ? e.message : "Falha no upload";
+      setError(msg.includes("UNAUTHORIZED") ? "Sessao expirada. Entre novamente." : msg);
     } finally {
       setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
   return (
-    <AdminField label={label}>
+    <AdminField label={label} hint="JPG, PNG, WEBP ou GIF ate 5MB">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
         <div className="h-28 w-28 shrink-0 overflow-hidden rounded-md border border-border bg-surface-2">
           {value ? (
@@ -108,7 +121,7 @@ export function ImageUploadField({
           )}
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <AdminInput value={value} onChange={(e) => onChange(e.target.value)} placeholder="/uploads/..." />
+          <AdminInput value={value} onChange={(e) => onChange(e.target.value)} placeholder="/cms-media/..." />
           <div className="flex flex-wrap gap-2">
             <AdminButton type="button" variant="outline" disabled={busy} onClick={() => inputRef.current?.click()}>
               {busy ? "Enviando..." : "Enviar arquivo"}
@@ -123,7 +136,7 @@ export function ImageUploadField({
           <input
             ref={inputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
             className="hidden"
             onChange={(e) => void onFile(e.target.files?.[0])}
           />

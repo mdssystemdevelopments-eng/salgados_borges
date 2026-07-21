@@ -1,6 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { writeFile } from "node:fs/promises";
-import path from "node:path";
 
 import {
   assertLoginAllowed,
@@ -14,7 +12,9 @@ import {
   verifyPassword,
 } from "./auth";
 import { createSeedCms } from "./seed";
-import { ensureUploadsDir, newId, readCms, updateCms, UPLOADS_DIR, writeCms } from "./store";
+import { withNormalizedSettings } from "./sections";
+import { newId, readCms, updateCms, writeCms } from "./store";
+import { saveCmsUpload } from "./uploads";
 import type {
   CmsCollection,
   CmsContent,
@@ -124,7 +124,10 @@ export const saveSettings = createServerFn({ method: "POST" })
   .validator((data: { settings: CmsSettings }) => data)
   .handler(async ({ data }) => {
     requireAuth();
-    return updateCms((cms) => ({ ...cms, settings: data.settings }));
+    return updateCms((cms) => ({
+      ...cms,
+      settings: withNormalizedSettings(data.settings),
+    }));
   });
 
 export const upsertCollectionItem = createServerFn({ method: "POST" })
@@ -205,40 +208,31 @@ export const resetCmsToSeed = createServerFn({ method: "POST" }).handler(async (
 
 export const uploadCmsImage = createServerFn({ method: "POST" })
   .validator((data: { filename: string; base64: string; mimeType: string }) => {
-    if (!data?.base64 || data.base64.length > 7_000_000) {
-      throw new Error("Arquivo invalido");
+    if (!data?.base64 || typeof data.base64 !== "string" || data.base64.length > 8_000_000) {
+      throw new Error("Arquivo invalido ou muito grande");
     }
-    return data;
+    return {
+      filename: typeof data.filename === "string" ? data.filename : "upload",
+      base64: data.base64.replace(/^data:[^;]+;base64,/, ""),
+      mimeType: typeof data.mimeType === "string" ? data.mimeType : "",
+    };
   })
   .handler(async ({ data }) => {
     requireAuth();
-    await ensureUploadsDir();
 
     const buffer = Buffer.from(data.base64, "base64");
+    if (!buffer.byteLength) {
+      throw new Error("Arquivo vazio");
+    }
     if (buffer.byteLength > 5 * 1024 * 1024) {
       throw new Error("Imagem maior que 5MB");
     }
 
     const sniffed = sniffImageMime(buffer);
     if (!sniffed) {
-      throw new Error("Arquivo nao e uma imagem valida");
+      throw new Error("Use JPG, PNG, WEBP ou GIF");
     }
 
-    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!allowed.includes(data.mimeType) || data.mimeType !== sniffed) {
-      throw new Error("Tipo de imagem nao suportado");
-    }
-
-    const ext =
-      sniffed === "image/png"
-        ? "png"
-        : sniffed === "image/webp"
-          ? "webp"
-          : sniffed === "image/gif"
-            ? "gif"
-            : "jpg";
-
-    const filename = `${Date.now()}-${newId("img")}.${ext}`;
-    await writeFile(path.join(UPLOADS_DIR, filename), buffer);
-    return { url: `/uploads/${filename}` };
+    const saved = await saveCmsUpload(buffer, sniffed);
+    return { url: saved.url };
   });
