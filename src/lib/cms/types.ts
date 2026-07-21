@@ -90,6 +90,10 @@ export type CmsContent = {
   logoUrl: string;
   hero: {
     image: string;
+    /** Opacidade da imagem de fundo (0-100). */
+    imageOpacity: number;
+    /** Intensidade do escurecimento por cima da imagem (0-100). */
+    overlayOpacity: number;
     titleLine1: string;
     titleLine2: string;
     titleLine3: string;

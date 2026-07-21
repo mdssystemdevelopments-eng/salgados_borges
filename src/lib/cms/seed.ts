@@ -12,6 +12,8 @@ export function createSeedCms(): CmsData {
       logoUrl,
       hero: {
         image: "/cms/hero-salgados.jpg",
+        imageOpacity: 100,
+        overlayOpacity: 60,
         titleLine1: "Salgados artesanais",
         titleLine2: "para ocasiões memoráveis",
         titleLine3: "",

@@ -346,6 +346,8 @@ function Hero({
   onMenu: () => void;
 }) {
   const { hero, brandName, logoUrl } = content;
+  const imageOpacity = Math.max(0, Math.min(100, hero.imageOpacity ?? 100)) / 100;
+  const overlayOpacity = Math.max(0, Math.min(100, hero.overlayOpacity ?? 60)) / 100;
 
   return (
     <section
@@ -358,10 +360,14 @@ function Hero({
           src={hero.image}
           alt=""
           className="h-full w-full object-cover"
+          style={{ opacity: imageOpacity }}
           width={1920}
           height={1080}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/70 to-background" />
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-background via-background/85 to-background"
+          style={{ opacity: overlayOpacity }}
+        />
         <div className="absolute inset-0 bg-noise opacity-40" />
       </div>
 

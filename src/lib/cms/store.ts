@@ -4,9 +4,23 @@ import { createSeedCms } from "./seed";
 import { withNormalizedSettings } from "./sections";
 import type { CmsData } from "./types";
 
+function clampPercent(value: unknown, fallback: number): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
 function normalizeCms(data: CmsData): CmsData {
   return {
     ...data,
+    content: {
+      ...data.content,
+      hero: {
+        ...data.content.hero,
+        imageOpacity: clampPercent(data.content.hero?.imageOpacity, 100),
+        overlayOpacity: clampPercent(data.content.hero?.overlayOpacity, 60),
+      },
+    },
     settings: withNormalizedSettings(data.settings),
   };
 }

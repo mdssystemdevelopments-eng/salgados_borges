@@ -1045,6 +1045,44 @@ function ContentSection({
           value={form.hero.image}
           onChange={(image) => updateForm({ ...form, hero: { ...form.hero, image } })}
         />
+        <AdminField
+          label={`Opacidade da imagem (${form.hero.imageOpacity ?? 100}%)`}
+          hint="0 = invisível, 100 = imagem bem visível"
+        >
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={form.hero.imageOpacity ?? 100}
+            onChange={(e) =>
+              updateForm({
+                ...form,
+                hero: { ...form.hero, imageOpacity: Number(e.target.value) },
+              })
+            }
+            className="w-full accent-[var(--gold)]"
+          />
+        </AdminField>
+        <AdminField
+          label={`Escurecimento por cima (${form.hero.overlayOpacity ?? 60}%)`}
+          hint="0 = sem filtro escuro, 100 = bem escuro (melhor leitura do texto)"
+        >
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={form.hero.overlayOpacity ?? 60}
+            onChange={(e) =>
+              updateForm({
+                ...form,
+                hero: { ...form.hero, overlayOpacity: Number(e.target.value) },
+              })
+            }
+            className="w-full accent-[var(--gold)]"
+          />
+        </AdminField>
         <AdminField label="Título linha 1">
           <AdminInput
             value={form.hero.titleLine1}
