@@ -1,0 +1,36 @@
+# Render Blueprint: Salgados Borges (front + back + Postgres)
+# https://render.com/docs/blueprint-spec
+
+databases:
+  - name: salgados-borges-db
+    plan: free
+    databaseName: salgados_borges
+    user: salgados
+
+services:
+  - type: web
+    name: salgados-borges
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: .
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: salgados-borges-db
+          property: connectionString
+      - key: CMS_ADMIN_PASSWORD
+        sync: false
+      - key: CMS_SESSION_SECRET
+        generateValue: true
+      - key: HOST
+        value: "0.0.0.0"
+    disk:
+      name: salgados-uploads
+      mountPath: /opt/render/project/src/public/uploads
+      sizeGB: 1

@@ -1,0 +1,427 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-21T20:23:07.600Z",
+  "content": {
+    "brandName": "Salgados Borges",
+    "brandTagline": "Salgados artesanais",
+    "logoUrl": "/cms/logo-salgados-borges.png",
+    "hero": {
+      "image": "/cms/hero-salgados.jpg",
+      "titleLine1": "Salgados artesanais",
+      "titleLine2": "para ocasiões memoráveis",
+      "titleLine3": "",
+      "subtitle": "Massa fina, recheio generoso e apresentação impecável. Cada pedido tratado como um evento único.",
+      "ctaPrimary": "Pedir no WhatsApp",
+      "ctaSecondary": "Ver cardápio",
+      "badges": [
+        "Produção artesanal",
+        "Entrega pontual",
+        "Ingredientes frescos"
+      ]
+    },
+    "about": {
+      "eyebrow": "Nossa história",
+      "title": "Uma casa construída sobre a",
+      "titleAccent": "tradição de bem servir",
+      "image": "/cms/sobre-cozinha.jpg",
+      "paragraphs": [
+        "A Salgados Borges nasceu de uma cozinha de família, onde receitas eram passadas de mão em mão. Hoje, mantemos o mesmo cuidado artesanal, elevando cada detalhe ao padrão que festas e eventos exigem.",
+        "Trabalhamos com fornecedores locais, em um processo produtivo que combina higiene rigorosa, tempo de descanso das massas e apresentação impecável. Nada aqui é acelerado. Tudo é feito no ritmo certo, para chegar quente, crocante e no horário combinado."
+      ],
+      "highlights": []
+    },
+    "productsSection": {
+      "eyebrow": "Cardápio",
+      "title": "Uma seleção feita para",
+      "titleAccent": "impressionar",
+      "subtitle": "Salgados mini, fritos, assados, kits completos e combos. Escolha, adicione ao pedido e finalize pelo WhatsApp em poucos segundos."
+    },
+    "howItWorks": {
+      "eyebrow": "Passo a passo",
+      "title": "Do primeiro clique",
+      "titleAccent": "à sua mesa"
+    },
+    "features": {
+      "eyebrow": "Por que escolher",
+      "title": "Excelência em cada",
+      "titleAccent": "detalhe"
+    },
+    "gallery": {
+      "eyebrow": "Galeria",
+      "title": "Momentos que",
+      "titleAccent": "falam por si",
+      "subtitle": "Bastidores da produção, eventos que atendemos e o cuidado com a apresentação em cada detalhe."
+    },
+    "testimonials": {
+      "eyebrow": "Depoimentos",
+      "title": "Quem prova",
+      "titleAccent": "confia"
+    },
+    "faq": {
+      "eyebrow": "Perguntas frequentes",
+      "title": "Tudo o que você",
+      "titleAccent": "quer saber"
+    },
+    "contact": {
+      "eyebrow": "Fale conosco",
+      "title": "Vamos preparar algo",
+      "titleAccent": "especial",
+      "subtitle": "Envie sua mensagem, tire dúvidas ou solicite um orçamento personalizado. Respondemos com atenção a cada solicitação."
+    },
+    "footer": {
+      "description": "Produção artesanal de salgados premium para festas, eventos corporativos e ocasiões especiais.",
+      "cnpj": "CNPJ 00.000.000/0001-00"
+    }
+  },
+  "settings": {
+    "whatsapp": "5517996604289",
+    "phone": "(17) 99660-4288",
+    "email": "contato@salgadosborges.com.br",
+    "address": "R. Tietê, 2870, Santa Eliza, Votuporanga, SP",
+    "hours": "Terça a domingo, das 8h às 20h",
+    "mapEmbedUrl": "https://www.google.com/maps?q=-20.4248943,-49.979195&hl=pt-BR&z=16&output=embed",
+    "instagramUrl": "https://instagram.com",
+    "facebookUrl": "https://facebook.com",
+    "seoTitle": "Salgados Borges | Salgados artesanais premium para festas e eventos",
+    "seoDescription": "Salgados Borges. Produção artesanal, ingredientes selecionados e apresentação impecável para festas, eventos corporativos e ocasiões especiais.",
+    "ogTitle": "Salgados Borges | Feito com sabor, feito pra você",
+    "ogDescription": "Salgados artesanais premium. Kits para festas, combos e opções fritas e assadas. Peça agora pelo WhatsApp.",
+    "sections": {
+      "hero": true,
+      "about": true,
+      "products": true,
+      "howItWorks": true,
+      "features": false,
+      "gallery": true,
+      "testimonials": false,
+      "faq": true,
+      "contact": true,
+      "floatingWhatsapp": true
+    }
+  },
+  "categories": [
+    {
+      "id": "mini",
+      "name": "Mini salgados",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "fritos",
+      "name": "Fritos",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "assados",
+      "name": "Assados",
+      "visible": true,
+      "order": 2
+    },
+    {
+      "id": "kits",
+      "name": "Kits para festas",
+      "visible": true,
+      "order": 3
+    },
+    {
+      "id": "combos",
+      "name": "Combos",
+      "visible": true,
+      "order": 4
+    }
+  ],
+  "products": [
+    {
+      "id": "coxinha-cento",
+      "name": "Coxinha de frango cremosa",
+      "description": "Massa fina e crocante, recheio de frango desfiado com catupiry artesanal.",
+      "price": 89.9,
+      "unit": "cento",
+      "categoryId": "mini",
+      "image": "/cms/prod-coxinha.jpg",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "kibe-cento",
+      "name": "Kibe libanês",
+      "description": "Trigo selecionado, carne bovina temperada com hortelã fresca e especiarias.",
+      "price": 94.9,
+      "unit": "cento",
+      "categoryId": "fritos",
+      "image": "/cms/prod-kibe.jpg",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "risole-cento",
+      "name": "Risole de queijo com presunto",
+      "description": "Massa dourada, muçarela derretida e presunto de primeira linha.",
+      "price": 89.9,
+      "unit": "cento",
+      "categoryId": "fritos",
+      "image": "/cms/prod-risole.jpg",
+      "visible": true,
+      "order": 2
+    },
+    {
+      "id": "esfiha-cento",
+      "name": "Esfiha aberta de carne",
+      "description": "Massa levemente doce, carne bovina moída na hora, cebola e limão siciliano.",
+      "price": 99.9,
+      "unit": "cento",
+      "categoryId": "assados",
+      "image": "/cms/prod-esfiha.jpg",
+      "visible": true,
+      "order": 3
+    },
+    {
+      "id": "empada-cento",
+      "name": "Empada de palmito",
+      "description": "Massa amanteigada, recheio cremoso de palmito pupunha e ervas frescas.",
+      "price": 109.9,
+      "unit": "cento",
+      "categoryId": "assados",
+      "image": "/cms/prod-empada.jpg",
+      "visible": true,
+      "order": 4
+    },
+    {
+      "id": "kit-100",
+      "name": "Kit Festa 100 unidades",
+      "description": "Seleção premium com coxinha, kibe, risole e esfiha. Ideal para 8 pessoas.",
+      "price": 179.9,
+      "unit": "kit",
+      "categoryId": "kits",
+      "image": "/cms/prod-kit-festa.jpg",
+      "visible": true,
+      "order": 5
+    },
+    {
+      "id": "kit-300",
+      "name": "Kit Celebração 300 unidades",
+      "description": "Sortimento completo dos nossos salgados assinatura. Ideal para 25 pessoas.",
+      "price": 489.9,
+      "unit": "kit",
+      "categoryId": "kits",
+      "image": "/cms/prod-kit-festa.jpg",
+      "visible": true,
+      "order": 6
+    },
+    {
+      "id": "combo-degusta",
+      "name": "Combo Degustação",
+      "description": "50 mini salgados variados para conhecer nossa linha completa.",
+      "price": 109.9,
+      "unit": "combo",
+      "categoryId": "combos",
+      "image": "/cms/prod-combo.jpg",
+      "visible": true,
+      "order": 7
+    }
+  ],
+  "gallery": [
+    {
+      "id": "g1",
+      "image": "/cms/gallery-1.jpg",
+      "alt": "Galeria 1",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "g2",
+      "image": "/cms/gallery-2.jpg",
+      "alt": "Galeria 2",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "g3",
+      "image": "/cms/gallery-3.jpg",
+      "alt": "Galeria 3",
+      "visible": true,
+      "order": 2
+    },
+    {
+      "id": "g4",
+      "image": "/cms/gallery-4.jpg",
+      "alt": "Galeria 4",
+      "visible": true,
+      "order": 3
+    },
+    {
+      "id": "g5",
+      "image": "/cms/gallery-5.jpg",
+      "alt": "Galeria 5",
+      "visible": true,
+      "order": 4
+    },
+    {
+      "id": "g6",
+      "image": "/cms/gallery-6.jpg",
+      "alt": "Galeria 6",
+      "visible": true,
+      "order": 5
+    }
+  ],
+  "faq": [
+    {
+      "id": "faq-1",
+      "question": "Qual o prazo mínimo de encomenda?",
+      "answer": "Trabalhamos com pedidos programados a partir de 48 horas de antecedência. Encomendas maiores exigem uma semana.",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "faq-2",
+      "question": "Quais as formas de pagamento?",
+      "answer": "Aceitamos Pix, transferência bancária e cartões via link seguro. Sinal de 30 por cento para reservar a data.",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "faq-3",
+      "question": "Vocês entregam?",
+      "answer": "Sim. Entregamos em toda a região com valor de frete calculado por distância. Também oferecemos retirada no ateliê.",
+      "visible": true,
+      "order": 2
+    },
+    {
+      "id": "faq-4",
+      "question": "Posso retirar no local?",
+      "answer": "Claro. Retirada disponível de terça a domingo, com horário previamente agendado.",
+      "visible": true,
+      "order": 3
+    },
+    {
+      "id": "faq-5",
+      "question": "Aceitam pedidos personalizados?",
+      "answer": "Sim. Recheios especiais, restrições alimentares e apresentações temáticas são bem-vindas.",
+      "visible": true,
+      "order": 4
+    },
+    {
+      "id": "faq-6",
+      "question": "Existe quantidade mínima?",
+      "answer": "O pedido mínimo é de 100 unidades ou um kit completo, o que for menor no seu caso.",
+      "visible": true,
+      "order": 5
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "t1",
+      "name": "Marina Salles",
+      "role": "Casamento em Ribeirão Preto",
+      "stars": 5,
+      "text": "Os salgados foram o assunto da festa. Apresentação impecável, sabor de casa e entrega no horário exato combinado.",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "t2",
+      "name": "Rafael Nogueira",
+      "role": "Diretor comercial",
+      "stars": 5,
+      "text": "Contratamos para um evento corporativo com 200 convidados. Padrão de qualidade acima do que esperávamos.",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "t3",
+      "name": "Camila Duarte",
+      "role": "Aniversário de 40 anos",
+      "stars": 5,
+      "text": "Do primeiro contato à entrega, tudo foi tratado com cuidado. As coxinhas foram devoradas em minutos.",
+      "visible": true,
+      "order": 2
+    }
+  ],
+  "steps": [
+    {
+      "id": "s1",
+      "number": "01",
+      "title": "Escolha os produtos",
+      "text": "Navegue pelo catálogo e selecione seus favoritos.",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "s2",
+      "number": "02",
+      "title": "Monte seu pedido",
+      "text": "Ajuste as quantidades e visualize o total em tempo real.",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "s3",
+      "number": "03",
+      "title": "Envie pelo WhatsApp",
+      "text": "Um clique gera a mensagem organizada com todos os itens.",
+      "visible": true,
+      "order": 2
+    },
+    {
+      "id": "s4",
+      "number": "04",
+      "title": "Confirmação e produção",
+      "text": "Confirmamos o orçamento e iniciamos a produção artesanal.",
+      "visible": true,
+      "order": 3
+    },
+    {
+      "id": "s5",
+      "number": "05",
+      "title": "Retirada ou entrega",
+      "text": "Entrega pontual ou retirada agendada no ateliê.",
+      "visible": true,
+      "order": 4
+    }
+  ],
+  "features": [
+    {
+      "id": "f1",
+      "title": "Produção artesanal",
+      "text": "Cada salgado é modelado à mão, sem atalhos industriais.",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "f2",
+      "title": "Ingredientes selecionados",
+      "text": "Fornecedores locais e insumos frescos, escolhidos diariamente.",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "f3",
+      "title": "Custo benefício justo",
+      "text": "Preço honesto para uma experiência acima da média.",
+      "visible": true,
+      "order": 2
+    },
+    {
+      "id": "f4",
+      "title": "Ideal para festas",
+      "text": "Aniversários, casamentos, chás e confraternizações.",
+      "visible": true,
+      "order": 3
+    },
+    {
+      "id": "f5",
+      "title": "Atende empresas",
+      "text": "Reuniões, coffee breaks e eventos corporativos com nota fiscal.",
+      "visible": true,
+      "order": 4
+    },
+    {
+      "id": "f6",
+      "title": "Entrega pontual",
+      "text": "Retirada agendada ou entrega no horário combinado.",
+      "visible": true,
+      "order": 5
+    }
+  ]
+}
