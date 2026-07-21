@@ -43,8 +43,13 @@ type PgClient = {
 
 async function withPg<T>(fn: (client: PgClient) => Promise<T>): Promise<T> {
   const { default: pg } = await import("pg");
+  // Neon pooler: remove channel_binding se vier na URL (node-pg pode falhar com ele)
+  const connectionString = (process.env.DATABASE_URL || "").replace(
+    /([&?])channel_binding=require&?/,
+    "$1",
+  ).replace(/[?&]$/, "");
   const client = new pg.Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
   });
   await client.connect();
