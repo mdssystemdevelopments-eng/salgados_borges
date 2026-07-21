@@ -350,21 +350,22 @@ function Hero({
   return (
     <section
       id="top"
-      className="relative flex items-center justify-center pt-28 md:pt-32 pb-10 md:pb-14 overflow-hidden"
+      className="relative flex items-center justify-center pt-28 md:pt-32 pb-12 md:pb-16 overflow-hidden min-h-[72vh] md:min-h-[78vh]"
     >
-      <div className="absolute inset-0 -z-10">
+      <div className="absolute inset-0">
         <img
+          key={hero.image}
           src={hero.image}
           alt=""
-          className="h-full w-full object-cover opacity-30"
-          width={1600}
-          height={1200}
+          className="h-full w-full object-cover"
+          width={1920}
+          height={1080}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background" />
-        <div className="absolute inset-0 bg-noise" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/70 to-background" />
+        <div className="absolute inset-0 bg-noise opacity-40" />
       </div>
 
-      <div className="mx-auto max-w-4xl px-6 text-center flex flex-col items-center gap-5 md:gap-6">
+      <div className="relative z-10 mx-auto max-w-4xl px-6 text-center flex flex-col items-center gap-5 md:gap-6">
         <div className="relative">
           <img
             src={logoUrl}

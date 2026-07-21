@@ -992,79 +992,100 @@ function ContentSection({
   onSave: (c: CmsContent) => void;
 }) {
   const [form, setForm] = useState(content);
-  useEffect(() => setForm(content), [content]);
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => {
+    setForm(content);
+    setDirty(false);
+  }, [content]);
+
+  const updateForm = (next: CmsContent) => {
+    setForm(next);
+    setDirty(true);
+  };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8 pb-24">
+      <div className="sticky top-20 z-10 flex items-center justify-between gap-3 rounded-lg border border-gold/40 bg-background/95 px-4 py-3 backdrop-blur">
+        <p className="text-sm text-muted-foreground">
+          {dirty ? "Há alterações não salvas." : "Tudo salvo."}
+        </p>
+        <AdminButton type="button" disabled={busy || !dirty} onClick={() => onSave(form)}>
+          Salvar textos
+        </AdminButton>
+      </div>
+
       <section className="space-y-4 rounded-lg border border-gold/35 bg-surface p-5">
         <h2 className="font-display text-2xl">Marca</h2>
         <AdminField label="Nome">
           <AdminInput
             value={form.brandName}
-            onChange={(e) => setForm({ ...form, brandName: e.target.value })}
+            onChange={(e) => updateForm({ ...form, brandName: e.target.value })}
           />
         </AdminField>
         <AdminField label="Tagline">
           <AdminInput
             value={form.brandTagline}
-            onChange={(e) => setForm({ ...form, brandTagline: e.target.value })}
+            onChange={(e) => updateForm({ ...form, brandTagline: e.target.value })}
           />
         </AdminField>
         <ImageUploadField
           label="Logo"
           value={form.logoUrl}
-          onChange={(logoUrl) => setForm({ ...form, logoUrl })}
+          onChange={(logoUrl) => updateForm({ ...form, logoUrl })}
         />
       </section>
 
       <section className="space-y-4 rounded-lg border border-gold/35 bg-surface p-5">
         <h2 className="font-display text-2xl">Hero</h2>
+        <p className="text-sm text-muted-foreground">
+          A imagem de fundo aparece atrás do logo e dos textos. Depois de enviar, clique em Salvar textos.
+        </p>
         <ImageUploadField
           label="Imagem de fundo"
           value={form.hero.image}
-          onChange={(image) => setForm({ ...form, hero: { ...form.hero, image } })}
+          onChange={(image) => updateForm({ ...form, hero: { ...form.hero, image } })}
         />
         <AdminField label="Título linha 1">
           <AdminInput
             value={form.hero.titleLine1}
-            onChange={(e) => setForm({ ...form, hero: { ...form.hero, titleLine1: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, titleLine1: e.target.value } })}
           />
         </AdminField>
         <AdminField label="Título linha 2">
           <AdminInput
             value={form.hero.titleLine2}
-            onChange={(e) => setForm({ ...form, hero: { ...form.hero, titleLine2: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, titleLine2: e.target.value } })}
           />
         </AdminField>
         <AdminField label="Título linha 3">
           <AdminInput
             value={form.hero.titleLine3}
-            onChange={(e) => setForm({ ...form, hero: { ...form.hero, titleLine3: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, titleLine3: e.target.value } })}
           />
         </AdminField>
         <AdminField label="Subtítulo">
           <AdminTextarea
             value={form.hero.subtitle}
-            onChange={(e) => setForm({ ...form, hero: { ...form.hero, subtitle: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, subtitle: e.target.value } })}
           />
         </AdminField>
         <AdminField label="CTA principal">
           <AdminInput
             value={form.hero.ctaPrimary}
-            onChange={(e) => setForm({ ...form, hero: { ...form.hero, ctaPrimary: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, ctaPrimary: e.target.value } })}
           />
         </AdminField>
         <AdminField label="CTA secundário">
           <AdminInput
             value={form.hero.ctaSecondary}
-            onChange={(e) => setForm({ ...form, hero: { ...form.hero, ctaSecondary: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, ctaSecondary: e.target.value } })}
           />
         </AdminField>
         <AdminField label="Badges (separados por |)">
           <AdminInput
             value={form.hero.badges.join(" | ")}
             onChange={(e) =>
-              setForm({
+              updateForm({
                 ...form,
                 hero: {
                   ...form.hero,
@@ -1081,31 +1102,31 @@ function ContentSection({
         <AdminField label="Eyebrow">
           <AdminInput
             value={form.about.eyebrow}
-            onChange={(e) => setForm({ ...form, about: { ...form.about, eyebrow: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, about: { ...form.about, eyebrow: e.target.value } })}
           />
         </AdminField>
         <AdminField label="Título">
           <AdminInput
             value={form.about.title}
-            onChange={(e) => setForm({ ...form, about: { ...form.about, title: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, about: { ...form.about, title: e.target.value } })}
           />
         </AdminField>
         <AdminField label="Título destaque">
           <AdminInput
             value={form.about.titleAccent}
-            onChange={(e) => setForm({ ...form, about: { ...form.about, titleAccent: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, about: { ...form.about, titleAccent: e.target.value } })}
           />
         </AdminField>
         <ImageUploadField
           label="Imagem"
           value={form.about.image}
-          onChange={(image) => setForm({ ...form, about: { ...form.about, image } })}
+          onChange={(image) => updateForm({ ...form, about: { ...form.about, image } })}
         />
         <AdminField label="Parágrafo 1">
           <AdminTextarea
             value={form.about.paragraphs[0] || ""}
             onChange={(e) =>
-              setForm({
+              updateForm({
                 ...form,
                 about: {
                   ...form.about,
@@ -1119,7 +1140,7 @@ function ContentSection({
           <AdminTextarea
             value={form.about.paragraphs[1] || ""}
             onChange={(e) =>
-              setForm({
+              updateForm({
                 ...form,
                 about: {
                   ...form.about,
@@ -1155,21 +1176,21 @@ function ContentSection({
               <AdminInput
                 value={block.eyebrow}
                 onChange={(e) =>
-                  setForm({ ...form, [key]: { ...block, eyebrow: e.target.value } })
+                  updateForm({ ...form, [key]: { ...block, eyebrow: e.target.value } })
                 }
               />
             </AdminField>
             <AdminField label="Título">
               <AdminInput
                 value={block.title}
-                onChange={(e) => setForm({ ...form, [key]: { ...block, title: e.target.value } })}
+                onChange={(e) => updateForm({ ...form, [key]: { ...block, title: e.target.value } })}
               />
             </AdminField>
             <AdminField label="Título destaque">
               <AdminInput
                 value={block.titleAccent}
                 onChange={(e) =>
-                  setForm({ ...form, [key]: { ...block, titleAccent: e.target.value } })
+                  updateForm({ ...form, [key]: { ...block, titleAccent: e.target.value } })
                 }
               />
             </AdminField>
@@ -1178,7 +1199,7 @@ function ContentSection({
                 <AdminTextarea
                   value={block.subtitle || ""}
                   onChange={(e) =>
-                    setForm({ ...form, [key]: { ...block, subtitle: e.target.value } })
+                    updateForm({ ...form, [key]: { ...block, subtitle: e.target.value } })
                   }
                 />
               </AdminField>
@@ -1193,19 +1214,19 @@ function ContentSection({
           <AdminTextarea
             value={form.footer.description}
             onChange={(e) =>
-              setForm({ ...form, footer: { ...form.footer, description: e.target.value } })
+              updateForm({ ...form, footer: { ...form.footer, description: e.target.value } })
             }
           />
         </AdminField>
         <AdminField label="CNPJ">
           <AdminInput
             value={form.footer.cnpj}
-            onChange={(e) => setForm({ ...form, footer: { ...form.footer, cnpj: e.target.value } })}
+            onChange={(e) => updateForm({ ...form, footer: { ...form.footer, cnpj: e.target.value } })}
           />
         </AdminField>
       </section>
 
-      <AdminButton type="button" disabled={busy} onClick={() => onSave(form)}>
+      <AdminButton type="button" disabled={busy || !dirty} onClick={() => onSave(form)}>
         Salvar textos
       </AdminButton>
     </div>
