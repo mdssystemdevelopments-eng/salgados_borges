@@ -1,11 +1,15 @@
 # Render Blueprint: Salgados Borges (front + back + Postgres)
 # https://render.com/docs/blueprint-spec
+#
+# Plano free: web + Postgres. Disco persistente NAO e suportado no free
+# (uploads ficam no filesystem ate o proximo redeploy; o CMS em si vai no Postgres).
 
 databases:
   - name: salgados-borges-db
     plan: free
     databaseName: salgados_borges
     user: salgados
+    region: oregon
 
 services:
   - type: web
@@ -13,13 +17,14 @@ services:
     runtime: node
     plan: free
     region: oregon
-    rootDir: .
     buildCommand: npm ci && npm run build
     startCommand: npm run start
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
+      - key: HOST
+        value: "0.0.0.0"
       - key: DATABASE_URL
         fromDatabase:
           name: salgados-borges-db
@@ -28,9 +33,3 @@ services:
         sync: false
       - key: CMS_SESSION_SECRET
         generateValue: true
-      - key: HOST
-        value: "0.0.0.0"
-    disk:
-      name: salgados-uploads
-      mountPath: /opt/render/project/src/public/uploads
-      sizeGB: 1
