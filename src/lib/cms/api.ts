@@ -2,7 +2,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { clearSession, createSession, isAuthenticated, requireAuth, verifyPassword } from "./auth";
+import {
+  assertLoginAllowed,
+  clearLoginFailures,
+  clearSession,
+  createSession,
+  isAuthenticated,
+  registerLoginFailure,
+  requireAuth,
+  sleep,
+  verifyPassword,
+} from "./auth";
 import { createSeedCms } from "./seed";
 import { ensureUploadsDir, newId, readCms, updateCms, UPLOADS_DIR, writeCms } from "./store";
 import type {
@@ -27,6 +37,32 @@ function toPublicCms(data: CmsData): CmsData {
     steps: sortByOrder(data.steps.filter((s) => s.visible)),
     features: sortByOrder(data.features.filter((f) => f.visible)),
   };
+}
+
+function sniffImageMime(buffer: Buffer): string | null {
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (
+    buffer.length >= 8 &&
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47
+  ) {
+    return "image/png";
+  }
+  if (
+    buffer.length >= 12 &&
+    buffer.toString("ascii", 0, 4) === "RIFF" &&
+    buffer.toString("ascii", 8, 12) === "WEBP"
+  ) {
+    return "image/webp";
+  }
+  if (buffer.length >= 6 && buffer.toString("ascii", 0, 3) === "GIF") {
+    return "image/gif";
+  }
+  return null;
 }
 
 export const getPublicCms = createServerFn({ method: "GET" }).handler(async () => {
@@ -54,11 +90,20 @@ export const getAuthStatus = createServerFn({ method: "GET" }).handler(async () 
 });
 
 export const loginAdmin = createServerFn({ method: "POST" })
-  .validator((data: { password: string }) => data)
+  .validator((data: { password: string }) => {
+    if (!data || typeof data.password !== "string" || data.password.length > 200) {
+      throw new Error("Dados invalidos");
+    }
+    return { password: data.password };
+  })
   .handler(async ({ data }) => {
+    assertLoginAllowed();
+    await sleep(350);
     if (!verifyPassword(data.password)) {
+      registerLoginFailure();
       throw new Error("Senha incorreta");
     }
+    clearLoginFailures();
     createSession();
     return { ok: true as const };
   });
@@ -133,15 +178,22 @@ export const reorderCollection = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     requireAuth();
     return updateCms((cms) => {
-      const map = new Map(
-        (cms[data.collection] as { id: string; order: number }[]).map((row) => [row.id, row]),
-      );
-      const list = data.orderedIds
-        .map((id, order) => {
-          const row = map.get(id);
-          return row ? { ...row, order } : null;
-        })
-        .filter(Boolean);
+      const current = cms[data.collection] as { id: string; order: number }[];
+      const map = new Map(current.map((row) => [row.id, row]));
+      const seen = new Set<string>();
+      const list: typeof current = [];
+      for (const id of data.orderedIds) {
+        const row = map.get(id);
+        if (row && !seen.has(id)) {
+          list.push({ ...row, order: list.length });
+          seen.add(id);
+        }
+      }
+      for (const row of current) {
+        if (!seen.has(row.id)) {
+          list.push({ ...row, order: list.length });
+        }
+      }
       return { ...cms, [data.collection]: list } as CmsData;
     });
   });
@@ -152,35 +204,41 @@ export const resetCmsToSeed = createServerFn({ method: "POST" }).handler(async (
 });
 
 export const uploadCmsImage = createServerFn({ method: "POST" })
-  .validator((data: { filename: string; base64: string; mimeType: string }) => data)
+  .validator((data: { filename: string; base64: string; mimeType: string }) => {
+    if (!data?.base64 || data.base64.length > 7_000_000) {
+      throw new Error("Arquivo invalido");
+    }
+    return data;
+  })
   .handler(async ({ data }) => {
     requireAuth();
     await ensureUploadsDir();
 
-    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!allowed.includes(data.mimeType)) {
-      throw new Error("Tipo de imagem não suportado");
-    }
-
-    const ext =
-      data.mimeType === "image/png"
-        ? "png"
-        : data.mimeType === "image/webp"
-          ? "webp"
-          : data.mimeType === "image/gif"
-            ? "gif"
-            : "jpg";
-
-    const safeBase = data.filename
-      .replace(/\.[^.]+$/, "")
-      .replace(/[^a-zA-Z0-9-_]/g, "-")
-      .slice(0, 40);
-    const filename = `${Date.now()}-${safeBase || "image"}.${ext}`;
     const buffer = Buffer.from(data.base64, "base64");
     if (buffer.byteLength > 5 * 1024 * 1024) {
       throw new Error("Imagem maior que 5MB");
     }
 
+    const sniffed = sniffImageMime(buffer);
+    if (!sniffed) {
+      throw new Error("Arquivo nao e uma imagem valida");
+    }
+
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(data.mimeType) || data.mimeType !== sniffed) {
+      throw new Error("Tipo de imagem nao suportado");
+    }
+
+    const ext =
+      sniffed === "image/png"
+        ? "png"
+        : sniffed === "image/webp"
+          ? "webp"
+          : sniffed === "image/gif"
+            ? "gif"
+            : "jpg";
+
+    const filename = `${Date.now()}-${newId("img")}.${ext}`;
     await writeFile(path.join(UPLOADS_DIR, filename), buffer);
     return { url: `/uploads/${filename}` };
   });

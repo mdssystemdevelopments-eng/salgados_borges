@@ -36,14 +36,14 @@ function AdminLoginPage() {
           <p className="mt-2 text-sm text-muted-foreground">Salgados Borges, área restrita</p>
         </div>
         <form onSubmit={(e) => void onSubmit(e)} className="space-y-5">
-          <AdminField label="Senha" hint="Padrão local: admin123 (altere em .env)">
+          <AdminField label="Senha">
             <AdminInput
               type="password"
               autoFocus
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Digite a senha"
             />
           </AdminField>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}

@@ -1117,7 +1117,7 @@ function CartDrawer({
                       className="text-muted-foreground hover:text-destructive text-xs"
                       aria-label="Remover"
                     >
-                      ✕
+                      Remover
                     </button>
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
@@ -1125,7 +1125,7 @@ function CartDrawer({
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2">
-                      <QtyBtn onClick={() => onQty(i.product.id, -1)}>−</QtyBtn>
+                      <QtyBtn onClick={() => onQty(i.product.id, -1)}>-</QtyBtn>
                       <span className="w-8 text-center text-sm">{i.qty}</span>
                       <QtyBtn onClick={() => onQty(i.product.id, 1)}>+</QtyBtn>
                     </div>
@@ -1174,10 +1174,10 @@ function CartDrawer({
               <button
                 type="button"
                 onClick={() => setCheckoutOpen(false)}
-                className="text-muted-foreground hover:text-gold"
+                className="text-sm text-muted-foreground hover:text-gold"
                 aria-label="Fechar"
               >
-                ✕
+                Fechar
               </button>
             </div>
             <p className="text-sm text-foreground">

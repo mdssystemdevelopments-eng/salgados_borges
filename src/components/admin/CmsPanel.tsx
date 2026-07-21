@@ -6,6 +6,7 @@ import {
   deleteCollectionItem,
   getAdminCms,
   logoutAdmin,
+  reorderCollection,
   resetCmsToSeed,
   saveContent,
   saveSettings,
@@ -220,6 +221,65 @@ export function CmsPanel({ initial }: { initial: CmsData }) {
 
 type RunFn = (fn: () => Promise<CmsData | void>, okMsg: string) => Promise<void>;
 
+function moveOrderedIds(ids: string[], id: string, direction: -1 | 1): string[] | null {
+  const index = ids.indexOf(id);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= ids.length) return null;
+  const next = [...ids];
+  const [item] = next.splice(index, 1);
+  next.splice(target, 0, item);
+  return next;
+}
+
+function OrderControls({
+  collection,
+  ids,
+  id,
+  busy,
+  run,
+}: {
+  collection: CmsCollection;
+  ids: string[];
+  id: string;
+  busy: boolean;
+  run: RunFn;
+}) {
+  const index = ids.indexOf(id);
+  const saveOrder = (direction: -1 | 1) => {
+    const orderedIds = moveOrderedIds(ids, id, direction);
+    if (!orderedIds) return;
+    void run(
+      () => reorderCollection({ data: { collection, orderedIds } }),
+      "Ordem atualizada",
+    );
+  };
+
+  return (
+    <div className="flex items-center gap-0.5">
+      <AdminButton
+        type="button"
+        variant="ghost"
+        disabled={busy || index <= 0}
+        onClick={() => saveOrder(-1)}
+        aria-label="Subir na ordem"
+        title="Subir"
+      >
+        Subir
+      </AdminButton>
+      <AdminButton
+        type="button"
+        variant="ghost"
+        disabled={busy || index < 0 || index >= ids.length - 1}
+        onClick={() => saveOrder(1)}
+        aria-label="Descer na ordem"
+        title="Descer"
+      >
+        Descer
+      </AdminButton>
+    </div>
+  );
+}
+
 function Dashboard({
   cms,
   busy,
@@ -241,8 +301,8 @@ function Dashboard({
   return (
     <div className="space-y-8">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        Gerencie todo o conteúdo do site: produtos, textos, imagens, contato e seções visíveis. As alterações
-        aparecem na página pública após salvar.
+        Gerencie todo o conteúdo do site: produtos, textos, imagens, contato e seções visíveis. Use Subir e Descer
+        em cada lista para definir a ordem no site. As alterações aparecem na página pública após salvar.
       </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
@@ -302,6 +362,7 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="bg-surface text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
+              <th className="px-4 py-3">Ordem</th>
               <th className="px-4 py-3">Produto</th>
               <th className="px-4 py-3">Preço</th>
               <th className="px-4 py-3">Status</th>
@@ -311,8 +372,18 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
           <tbody>
             {cms.products.map((p) => {
               const cat = cms.categories.find((c) => c.id === p.categoryId)?.name || p.categoryId;
+              const productIds = cms.products.map((row) => row.id);
               return (
                 <tr key={p.id} className="border-t border-border">
+                  <td className="px-4 py-3">
+                    <OrderControls
+                      collection="products"
+                      ids={productIds}
+                      id={p.id}
+                      busy={busy}
+                      run={run}
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img src={p.image} alt="" className="h-12 w-12 rounded object-cover bg-surface-2" />
@@ -474,7 +545,7 @@ function CategoriesSection({ cms, busy, run }: { cms: CmsData; busy: boolean; ru
   return (
     <div>
       <p className="mb-4 text-sm text-foreground/90">
-        Adicione, edite, oculte ou exclua as categorias do cardápio. Os produtos usam essas categorias no site.
+        Adicione, edite, oculte ou exclua as categorias do cardápio. Use Subir e Descer para definir a ordem no site.
       </p>
       <CollectionToolbar
         busy={busy}
@@ -493,6 +564,13 @@ function CategoriesSection({ cms, busy, run }: { cms: CmsData; busy: boolean; ru
             badge={<VisibilityBadge visible={c.visible} />}
             actions={
               <>
+                <OrderControls
+                  collection="categories"
+                  ids={cms.categories.map((row) => row.id)}
+                  id={c.id}
+                  busy={busy}
+                  run={run}
+                />
                 <AdminButton type="button" variant="ghost" onClick={() => setEditing(c)}>
                   Editar
                 </AdminButton>
@@ -579,9 +657,16 @@ function GallerySection({ cms, busy, run }: { cms: CmsData; busy: boolean; run: 
         {cms.gallery.map((g) => (
           <div key={g.id} className="overflow-hidden rounded-lg border border-gold/35 bg-surface">
             <img src={g.image} alt={g.alt} className="aspect-square w-full object-cover" />
-            <div className="flex items-center justify-between gap-2 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3">
               <VisibilityBadge visible={g.visible} />
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
+                <OrderControls
+                  collection="gallery"
+                  ids={cms.gallery.map((row) => row.id)}
+                  id={g.id}
+                  busy={busy}
+                  run={run}
+                />
                 <AdminButton type="button" variant="ghost" onClick={() => setEditing(g)}>
                   Editar
                 </AdminButton>
@@ -689,6 +774,13 @@ function SimpleTextCollection<T extends { id: string; visible: boolean }>({
             badge={<VisibilityBadge visible={item.visible} />}
             actions={
               <>
+                <OrderControls
+                  collection={collection}
+                  ids={items.map((row) => row.id)}
+                  id={item.id}
+                  busy={busy}
+                  run={run}
+                />
                 <AdminButton type="button" variant="ghost" onClick={() => setEditing(item)}>
                   Editar
                 </AdminButton>
