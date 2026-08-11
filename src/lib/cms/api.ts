@@ -39,6 +39,19 @@ function toPublicCms(data: CmsData): CmsData {
   };
 }
 
+let publicCmsCache: { data: CmsData; at: number } | null = null;
+const PUBLIC_CMS_CACHE_MS = 30_000;
+
+function getCachedPublicCms(data: CmsData): CmsData {
+  const next = toPublicCms(data);
+  publicCmsCache = { data: next, at: Date.now() };
+  return next;
+}
+
+function invalidatePublicCmsCache(): void {
+  publicCmsCache = null;
+}
+
 function sniffImageMime(buffer: Buffer): string | null {
   if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
     return "image/jpeg";
@@ -66,8 +79,11 @@ function sniffImageMime(buffer: Buffer): string | null {
 }
 
 export const getPublicCms = createServerFn({ method: "GET" }).handler(async () => {
-  const data = await readCms();
-  return toPublicCms(data);
+  const now = Date.now();
+  if (publicCmsCache && now - publicCmsCache.at < PUBLIC_CMS_CACHE_MS) {
+    return publicCmsCache.data;
+  }
+  return getCachedPublicCms(await readCms());
 });
 
 export const getAdminCms = createServerFn({ method: "GET" }).handler(async () => {
@@ -117,6 +133,7 @@ export const saveContent = createServerFn({ method: "POST" })
   .validator((data: { content: CmsContent }) => data)
   .handler(async ({ data }) => {
     requireAuth();
+    invalidatePublicCmsCache();
     return updateCms((cms) => ({ ...cms, content: data.content }));
   });
 
@@ -124,6 +141,7 @@ export const saveSettings = createServerFn({ method: "POST" })
   .validator((data: { settings: CmsSettings }) => data)
   .handler(async ({ data }) => {
     requireAuth();
+    invalidatePublicCmsCache();
     return updateCms((cms) => ({
       ...cms,
       settings: withNormalizedSettings(data.settings),
@@ -136,6 +154,7 @@ export const upsertCollectionItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     requireAuth();
+    invalidatePublicCmsCache();
     return updateCms((cms) => {
       const list = [...(cms[data.collection] as Record<string, unknown>[])];
       const item = { ...data.item };
@@ -158,6 +177,7 @@ export const deleteCollectionItem = createServerFn({ method: "POST" })
   .validator((data: { collection: CmsCollection; id: string }) => data)
   .handler(async ({ data }) => {
     requireAuth();
+    invalidatePublicCmsCache();
     return updateCms((cms) => {
       const list = (cms[data.collection] as { id: string }[]).filter((row) => row.id !== data.id);
       return { ...cms, [data.collection]: list } as CmsData;
@@ -168,6 +188,7 @@ export const toggleCollectionItem = createServerFn({ method: "POST" })
   .validator((data: { collection: CmsCollection; id: string }) => data)
   .handler(async ({ data }) => {
     requireAuth();
+    invalidatePublicCmsCache();
     return updateCms((cms) => {
       const list = (cms[data.collection] as { id: string; visible: boolean }[]).map((row) =>
         row.id === data.id ? { ...row, visible: !row.visible } : row,
@@ -180,6 +201,7 @@ export const reorderCollection = createServerFn({ method: "POST" })
   .validator((data: { collection: CmsCollection; orderedIds: string[] }) => data)
   .handler(async ({ data }) => {
     requireAuth();
+    invalidatePublicCmsCache();
     return updateCms((cms) => {
       const current = cms[data.collection] as { id: string; order: number }[];
       const map = new Map(current.map((row) => [row.id, row]));
@@ -203,6 +225,7 @@ export const reorderCollection = createServerFn({ method: "POST" })
 
 export const resetCmsToSeed = createServerFn({ method: "POST" }).handler(async () => {
   requireAuth();
+  invalidatePublicCmsCache();
   return writeCms(createSeedCms());
 });
 

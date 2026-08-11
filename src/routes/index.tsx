@@ -218,6 +218,30 @@ function scrollTo(id: string) {
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function SiteLogo({
+  src,
+  alt,
+  className = "",
+  priority = false,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  priority?: boolean;
+}) {
+  return (
+    <span className={`inline-flex shrink-0 overflow-hidden rounded-full ${className}`}>
+      <img
+        src={src}
+        alt={alt}
+        className="site-logo h-full w-full"
+        decoding="async"
+        fetchPriority={priority ? "high" : "auto"}
+      />
+    </span>
+  );
+}
+
 /* ----------------------------- Header ------------------------------ */
 function Header({
   brandName,
@@ -238,7 +262,15 @@ function Header({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 40);
+        ticking = false;
+      });
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -254,18 +286,19 @@ function Header({
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-40 transition-all duration-500 ${
+      className={`fixed top-0 inset-x-0 z-40 transition-[background-color,box-shadow,border-color] duration-200 ${
         scrolled
-          ? "bg-background/90 backdrop-blur-xl border-b border-gold/20 shadow-deep"
-          : "bg-gradient-to-b from-background/70 to-transparent backdrop-blur-sm"
+          ? "bg-background/95 border-b border-gold/20 shadow-deep"
+          : "bg-background/85 border-b border-transparent"
       }`}
     >
       <div className="mx-auto max-w-7xl px-5 lg:px-10 flex items-center justify-between gap-3 h-24 md:h-28">
         <a href="#top" className="flex items-center gap-3 md:gap-4 group min-w-0 flex-1">
-          <img
+          <SiteLogo
             src={logoUrl}
             alt={brandName}
-            className="h-14 w-14 md:h-[4.5rem] md:w-[4.5rem] shrink-0 rounded-full object-cover"
+            className="h-14 w-14 md:h-[4.5rem] md:w-[4.5rem] shrink-0"
+            priority
           />
           <div className="leading-tight">
             <div className="font-display text-xl sm:text-2xl md:text-3xl lg:text-[2rem] text-gold-gradient tracking-wide whitespace-nowrap">
@@ -289,7 +322,7 @@ function Header({
 
           <button
             onClick={onOpenCart}
-            className="relative flex items-center gap-2 rounded-full bg-gold-gradient text-primary-foreground px-4 md:px-5 py-2.5 md:py-3 text-sm uppercase tracking-[0.18em] font-semibold shadow-gold-sm hover:shadow-gold-glow transition-all"
+            className="relative flex items-center gap-2 rounded-full bg-gold-gradient text-primary-foreground px-4 md:px-5 py-2.5 md:py-3 text-sm uppercase tracking-[0.18em] font-semibold shadow-gold-sm hover:shadow-gold-glow transition-shadow"
           >
             <CartIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Pedido</span>
@@ -313,7 +346,7 @@ function Header({
       </div>
 
       {mobileOpen ? (
-        <div className="lg:hidden bg-background/95 backdrop-blur border-t border-gold/20">
+        <div className="lg:hidden bg-background/95 border-t border-gold/20">
           <div className="px-6 py-6 flex flex-col gap-4">
             {links.map((l) => (
               <button
@@ -363,22 +396,22 @@ function Hero({
           style={{ opacity: imageOpacity }}
           width={1920}
           height={1080}
+          decoding="async"
+          fetchPriority="high"
         />
         <div
           className="absolute inset-0 bg-gradient-to-b from-background via-background/85 to-background"
           style={{ opacity: overlayOpacity }}
         />
-        <div className="absolute inset-0 bg-noise opacity-40" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 text-center flex flex-col items-center gap-5 md:gap-6">
-        <div className="relative">
-          <img
-            src={logoUrl}
-            alt={brandName}
-            className="relative h-52 w-52 sm:h-64 sm:w-64 md:h-80 md:w-80 lg:h-[22rem] lg:w-[22rem] rounded-full object-cover"
-          />
-        </div>
+        <SiteLogo
+          src={logoUrl}
+          alt={brandName}
+          className="h-52 w-52 sm:h-64 sm:w-64 md:h-80 md:w-80 lg:h-[22rem] lg:w-[22rem]"
+          priority
+        />
 
         <h1 className="sr-only">{brandName}</h1>
         <p className="font-display leading-[1.08] text-3xl sm:text-4xl md:text-5xl lg:text-6xl animate-fade-up">
@@ -439,8 +472,6 @@ function Sobre({
 }) {
   return (
     <section id="sobre" className="relative py-14 lg:py-20 overflow-hidden">
-      <div className="absolute inset-0 -z-10 bg-noise opacity-60" />
-
       <div className="mx-auto max-w-7xl px-6 lg:px-10 space-y-8 lg:space-y-10">
         <div className="text-center max-w-3xl mx-auto space-y-5">
           <span className="divider-gold">{about.eyebrow}</span>
@@ -534,18 +565,19 @@ function Produtos({
 
 function ProductCard({ product, onAdd }: { product: CartProduct; onAdd: (p: CartProduct) => void }) {
   return (
-    <article className="group relative overflow-hidden rounded-lg bg-background panel-outline hover:border-gold transition-all duration-500">
+    <article className="group relative overflow-hidden rounded-lg bg-background panel-outline hover:border-gold transition-[border-color,box-shadow] duration-200">
       <div className="aspect-square overflow-hidden bg-surface-2 relative border-b border-border">
         <img
           src={product.image}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           loading="lazy"
+          decoding="async"
           width={900}
           height={900}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent opacity-70" />
-        <span className="absolute top-3 left-3 text-[10px] uppercase tracking-[0.14em] text-gold border border-gold rounded-full px-2.5 py-0.5 bg-background/60 backdrop-blur">
+        <span className="absolute top-3 left-3 text-[10px] uppercase tracking-[0.14em] text-gold border border-gold rounded-full px-2.5 py-0.5 bg-background/80">
           {product.category}
         </span>
       </div>
@@ -637,7 +669,6 @@ function Diferenciais({
               key={d.id}
               className="group relative overflow-hidden rounded-lg panel-outline p-8 hover:border-gold transition-all"
             >
-              <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-gold-gradient opacity-0 group-hover:opacity-20 transition-opacity blur-3xl" />
               <div className="h-10 w-10 rounded-full bg-gold-gradient text-primary-foreground flex items-center justify-center mb-5">
                 <SealIcon className="h-5 w-5" />
               </div>
@@ -685,7 +716,7 @@ function Galeria({
               <img
                 src={item.image}
                 alt={item.alt}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-background/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -941,10 +972,10 @@ function Footer({ content }: { content: CmsData["content"] }) {
       <div className="mx-auto max-w-7xl px-6 lg:px-10 py-10 grid md:grid-cols-4 gap-6">
         <div className="md:col-span-2 space-y-4 rounded-lg panel-outline p-5">
           <div className="flex items-center gap-4">
-            <img
+            <SiteLogo
               src={content.logoUrl}
               alt={content.brandName}
-              className="h-20 w-20 md:h-24 md:w-24 shrink-0 rounded-full object-cover"
+              className="h-20 w-20 md:h-24 md:w-24 shrink-0"
             />
             <div>
               <div className="font-display text-2xl text-gold-gradient">{content.brandName}</div>
@@ -1015,7 +1046,7 @@ function FloatingCart({
     <button
       type="button"
       onClick={onOpen}
-      className="fixed bottom-6 left-6 z-30 flex items-center gap-3 rounded-full border border-gold/50 bg-background/95 px-4 py-3 text-foreground shadow-gold-glow backdrop-blur-md transition-transform hover:scale-[1.03]"
+      className="fixed bottom-6 left-6 z-30 flex items-center gap-3 rounded-full border border-gold/50 bg-background/95 px-4 py-3 text-foreground shadow-gold-glow transition-transform hover:scale-[1.02]"
       aria-label="Abrir carrinho"
     >
       <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-gold-gradient text-primary-foreground">
@@ -1104,13 +1135,13 @@ function CartDrawer({
   return (
     <>
       <div
-        className={`fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-opacity ${
+        className={`fixed inset-0 z-50 bg-background/85 transition-opacity ${
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
       />
       <aside
-        className={`fixed top-0 right-0 z-50 h-full w-full sm:w-[440px] bg-surface border-l border-gold/40 shadow-deep transform transition-transform duration-500 ${
+        className={`fixed top-0 right-0 z-50 h-full w-full sm:w-[440px] bg-surface border-l border-gold/40 shadow-deep transform transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         } flex flex-col`}
       >
@@ -1291,7 +1322,7 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-center justify-center p-6"
+      className="fixed inset-0 z-[60] bg-background/95 flex items-center justify-center p-6"
       onClick={onClose}
     >
       <button

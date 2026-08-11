@@ -189,7 +189,23 @@
 }
 
 @utility animate-fade-up {
-  animation: fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility site-logo {
+  object-fit: contain;
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .shimmer-text {
+    animation: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 @keyframes float-slow {
