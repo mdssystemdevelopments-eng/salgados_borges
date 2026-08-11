@@ -18,6 +18,14 @@ Localmente o CMS usa `data/cms.json`. Com `DATABASE_URL` usa PostgreSQL (Neon).
 
 Este projeto **nao e site estatico puro**: usa SSR, server functions, admin CMS, banco e upload de imagens. A Vercel hospeda tudo isso via TanStack Start + Nitro (preset `vercel`).
 
+### Importante (plano Hobby da Vercel)
+
+Repositorios **privados em organizacao GitHub** (ex.: `mdssystemdevelopments-eng`) **nao funcionam** no plano gratuito da Vercel. Opcoes:
+
+1. Repo **publico** no GitHub (configurado assim para deploy gratuito)
+2. Upgrade para **Vercel Pro**
+3. Deploy manual com CLI: `npx vercel --prod` (sem conectar Git)
+
 ### Pre-requisitos
 
 1. Conta na [Vercel](https://vercel.com)
