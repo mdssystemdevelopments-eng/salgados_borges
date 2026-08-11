@@ -1,12 +1,37 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { getPublicCms } from "@/lib/cms/api";
-import { NAV_SECTION_META, normalizeSectionOrder } from "@/lib/cms/sections";
+import { FOOTER_SECTION_LINKS, NAV_SECTION_META, normalizeSectionOrder } from "@/lib/cms/sections";
 import type { CmsData, CmsPageSection } from "@/lib/cms/types";
 
 export const Route = createFileRoute("/")({
   loader: () => getPublicCms(),
+  head: ({ loaderData }) => {
+    const cms = loaderData as CmsData | undefined;
+    const settings = cms?.settings;
+    const content = cms?.content;
+    const title = settings?.seoTitle || "Salgados Borges | Salgados artesanais premium";
+    const description =
+      settings?.seoDescription ||
+      "Salgados artesanais premium para festas e eventos. Peça pelo WhatsApp.";
+    const ogTitle = settings?.ogTitle || title;
+    const ogDescription = settings?.ogDescription || description;
+
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: ogTitle },
+        { property: "og:description", content: ogDescription },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        ...(content?.logoUrl
+          ? [{ property: "og:image", content: content.logoUrl }]
+          : []),
+      ],
+    };
+  },
   component: SalgadosBorgesPage,
 });
 
@@ -113,7 +138,6 @@ function SalgadosBorgesPage() {
               key={key}
               content={content}
               whatsapp={settings.whatsapp}
-              onOrder={() => scrollTo("produtos")}
               onMenu={() => scrollTo("produtos")}
             />
           );
@@ -375,7 +399,6 @@ function Hero({
 }: {
   content: CmsData["content"];
   whatsapp: string;
-  onOrder: () => void;
   onMenu: () => void;
 }) {
   const { hero, brandName, logoUrl } = content;
@@ -553,9 +576,14 @@ function Produtos({
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} onAdd={onAdd} />
-          ))}
+          {products.length === 0 ? (
+            <p className="col-span-full py-12 text-center text-base text-muted-foreground">
+              Nenhum produto nesta categoria no momento. Escolha outra categoria ou fale conosco pelo
+              WhatsApp.
+            </p>
+          ) : (
+            products.map((p) => <ProductCard key={p.id} product={p} onAdd={onAdd} />)
+          )}
         </div>
         </div>
       </div>
@@ -654,7 +682,7 @@ function Diferenciais({
   features: CmsData["features"];
 }) {
   return (
-    <section className="py-14 lg:py-20 bg-surface relative">
+    <section id="diferenciais" className="py-14 lg:py-20 bg-surface relative">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto space-y-5 mb-8">
           <span className="divider-gold">{section.eyebrow}</span>
@@ -741,7 +769,7 @@ function Avaliacoes({
   testimonials: CmsData["testimonials"];
 }) {
   return (
-    <section className="py-14 lg:py-20 bg-surface">
+    <section id="depoimentos" className="py-14 lg:py-20 bg-surface">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="text-center max-w-2xl mx-auto space-y-5 mb-8">
           <span className="divider-gold">{section.eyebrow}</span>
@@ -789,7 +817,7 @@ function Faq({
   onToggle: (i: number) => void;
 }) {
   return (
-    <section className="py-14 lg:py-20">
+    <section id="faq" className="py-14 lg:py-20">
       <div className="mx-auto max-w-4xl px-6 lg:px-10">
         <div className="text-center space-y-5 mb-8">
           <span className="divider-gold">{section.eyebrow}</span>
@@ -852,13 +880,40 @@ function Contato({
     window.open(waLink(settings.whatsapp, text), "_blank");
   };
 
-  const contacts = [
-    { icon: <PhoneIcon className="h-4 w-4" />, label: "Telefone", value: settings.phone },
-    { icon: <WhatsIcon className="h-4 w-4" />, label: "WhatsApp", value: settings.phone },
-    { icon: <MailIcon className="h-4 w-4" />, label: "E-mail", value: settings.email },
+  const whatsappDisplay = formatWhatsappDisplay(settings.whatsapp);
+
+  const contacts: {
+    icon: ReactNode;
+    label: string;
+    value: string;
+    href?: string;
+  }[] = [
+    {
+      icon: <PhoneIcon className="h-4 w-4" />,
+      label: "Telefone",
+      value: settings.phone,
+      href: `tel:+${settings.whatsapp}`,
+    },
+    {
+      icon: <WhatsIcon className="h-4 w-4" />,
+      label: "WhatsApp",
+      value: whatsappDisplay,
+      href: waLink(settings.whatsapp, "Olá! Gostaria de mais informações."),
+    },
+    {
+      icon: <MailIcon className="h-4 w-4" />,
+      label: "E-mail",
+      value: settings.email,
+      href: `mailto:${settings.email}`,
+    },
     { icon: <PinIcon className="h-4 w-4" />, label: "Endereço", value: settings.address },
     { icon: <ClockIcon className="h-4 w-4" />, label: "Atendimento", value: settings.hours },
   ];
+
+  const socialLinks = [
+    { label: "Instagram", href: settings.instagramUrl },
+    { label: "Facebook", href: settings.facebookUrl },
+  ].filter((s) => s.href.trim() && !isGenericSocialUrl(s.href));
 
   return (
     <section id="contato" className="py-14 lg:py-20 bg-surface">
@@ -881,28 +936,38 @@ function Contato({
                 </div>
                 <div>
                   <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{c.label}</div>
-                  <div className="text-base text-foreground">{c.value}</div>
+                  {c.href ? (
+                    <a
+                      href={c.href}
+                      target={c.label === "WhatsApp" ? "_blank" : undefined}
+                      rel={c.label === "WhatsApp" ? "noreferrer" : undefined}
+                      className="text-base text-foreground hover:text-gold transition-colors"
+                    >
+                      {c.value}
+                    </a>
+                  ) : (
+                    <div className="text-base text-foreground">{c.value}</div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="flex gap-3 pt-2">
-            {[
-              { label: "Instagram", href: settings.instagramUrl },
-              { label: "Facebook", href: settings.facebookUrl },
-            ].map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-gold/40 px-4 py-2 text-sm uppercase tracking-[0.16em] text-foreground hover:text-gold hover:border-gold transition-all"
-              >
-                {s.label}
-              </a>
-            ))}
-          </div>
+          {socialLinks.length > 0 ? (
+            <div className="flex gap-3 pt-2">
+              {socialLinks.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-gold/40 px-4 py-2 text-sm uppercase tracking-[0.16em] text-foreground hover:text-gold hover:border-gold transition-all"
+                >
+                  {s.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="space-y-6">
@@ -989,10 +1054,10 @@ function Footer({ content }: { content: CmsData["content"] }) {
         <div className="space-y-3 rounded-lg panel-outline p-5">
           <div className="text-sm uppercase tracking-[0.2em] text-gold">Institucional</div>
           <ul className="space-y-2 text-base text-muted-foreground">
-            {["Sobre", "Cardápio", "Como funciona", "Galeria"].map((l) => (
-              <li key={l}>
-                <a href="#top" className="hover:text-gold transition-colors">
-                  {l}
+            {FOOTER_SECTION_LINKS.map((l) => (
+              <li key={l.href}>
+                <a href={`#${l.href}`} className="hover:text-gold transition-colors">
+                  {l.label}
                 </a>
               </li>
             ))}
@@ -1003,14 +1068,14 @@ function Footer({ content }: { content: CmsData["content"] }) {
           <div className="text-sm uppercase tracking-[0.2em] text-gold">Políticas</div>
           <ul className="space-y-2 text-base text-muted-foreground">
             <li>
-              <a href="#" className="hover:text-gold transition-colors">
+              <Link to="/politica-de-privacidade" className="hover:text-gold transition-colors">
                 Política de Privacidade
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-gold transition-colors">
+              <Link to="/termos-de-uso" className="hover:text-gold transition-colors">
                 Termos de Uso
-              </a>
+              </Link>
             </li>
             <li>
               <a href="#contato" className="hover:text-gold transition-colors">
@@ -1342,6 +1407,27 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
 /* ------------------------------ Utils ------------------------------ */
 function waLink(whatsapp: string, msg: string) {
   return `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
+}
+
+function formatWhatsappDisplay(whatsapp: string): string {
+  const digits = whatsapp.replace(/\D/g, "");
+  if (digits.length === 13 && digits.startsWith("55")) {
+    const ddd = digits.slice(2, 4);
+    const part1 = digits.slice(4, 9);
+    const part2 = digits.slice(9);
+    return `(${ddd}) ${part1}-${part2}`;
+  }
+  return whatsapp;
+}
+
+function isGenericSocialUrl(url: string): boolean {
+  const normalized = url.trim().replace(/\/$/, "").toLowerCase();
+  return (
+    normalized === "https://instagram.com" ||
+    normalized === "https://www.instagram.com" ||
+    normalized === "https://facebook.com" ||
+    normalized === "https://www.facebook.com"
+  );
 }
 
 /* ------------------------------ Icons ------------------------------ */

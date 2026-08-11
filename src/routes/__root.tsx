@@ -78,20 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#0a0a0a" },
-      { title: "Salgados Borges | Salgados artesanais premium para festas e eventos" },
-      {
-        name: "description",
-        content:
-          "Salgados Borges. Produção artesanal, ingredientes selecionados e apresentação impecável para festas, eventos corporativos e ocasiões especiais.",
-      },
-      { property: "og:title", content: "Salgados Borges | Feito com sabor, feito pra você" },
-      {
-        property: "og:description",
-        content:
-          "Salgados artesanais premium. Kits para festas, combos e opções fritas e assadas. Peça agora pelo WhatsApp.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { title: "Salgados Borges" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
