@@ -38,11 +38,17 @@ export function parseRequestHostname(request: Request): string {
   return normalizeHostname(host);
 }
 
+export function isDedicatedAdminSubdomain(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase();
+  return normalized === getConfiguredAdminHost();
+}
+
+/** Host pode acessar rotas /admin (subdominio CMS ou localhost em dev). */
 export function isAdminHost(hostname: string): boolean {
   const normalized = hostname.trim().toLowerCase();
   if (!normalized) return false;
 
-  if (normalized === getConfiguredAdminHost()) return true;
+  if (isDedicatedAdminSubdomain(normalized)) return true;
 
   if (isDevHostname(normalized) && isLocalhostAdminEnabled()) return true;
 

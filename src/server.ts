@@ -6,6 +6,7 @@ import {
   isAdminHost,
   isAdminPath,
   isAllowedOnAdminHost,
+  isDedicatedAdminSubdomain,
   parseRequestHostname,
 } from "./lib/cms/admin-host";
 import { runWithRequestContext } from "./lib/cms/request-context";
@@ -72,13 +73,13 @@ function isServerFnRequest(request: Request): boolean {
 
 function enforceAdminHostRouting(request: Request, hostname: string): Response | null {
   const { pathname } = new URL(request.url);
-  const onAdminHost = isAdminHost(hostname);
 
-  if (isAdminPath(pathname) && !onAdminHost) {
+  if (isAdminPath(pathname) && !isAdminHost(hostname)) {
     return adminAccessDeniedResponse();
   }
 
-  if (onAdminHost) {
+  // Subdominio exclusivo (admincms.*): so CMS — localhost serve site + admin
+  if (isDedicatedAdminSubdomain(hostname)) {
     if (pathname === "/") {
       return Response.redirect(new URL("/admin/login", request.url), 302);
     }
