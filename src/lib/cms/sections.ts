@@ -1,4 +1,5 @@
 import type { CmsPageSection, CmsSectionsVisibility, CmsSettings } from "./types";
+import { normalizeOrderSettings } from "./migrate";
 
 export const DEFAULT_SECTION_ORDER: CmsPageSection[] = [
   "hero",
@@ -37,6 +38,14 @@ export const NAV_SECTION_META: Partial<
   contact: { href: "contato", label: "Contato" },
 };
 
+/** Links essenciais no menu superior — evita barra poluida */
+export const HEADER_NAV_SECTIONS: CmsPageSection[] = [
+  "products",
+  "about",
+  "gallery",
+  "contact",
+];
+
 export const FOOTER_SECTION_LINKS: { href: string; label: string }[] = [
   { href: "sobre", label: "Sobre" },
   { href: "produtos", label: "Cardápio" },
@@ -70,6 +79,7 @@ export function withNormalizedSettings(settings: CmsSettings): CmsSettings {
   return {
     ...settings,
     sectionOrder: normalizeSectionOrder(settings.sectionOrder),
+    orderSettings: normalizeOrderSettings(settings.orderSettings),
   };
 }
 

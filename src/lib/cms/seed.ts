@@ -1,10 +1,14 @@
+import {
+  createDefaultOrderSettings,
+  createSampleCoupons,
+} from "./order-defaults";
 import type { CmsData } from "./types";
 
 const logoUrl = "/cms/logo-salgados-borges.png";
 
 export function createSeedCms(): CmsData {
   return {
-    version: 1,
+    version: 2,
     updatedAt: new Date().toISOString(),
     content: {
       brandName: "Salgados Borges",
@@ -15,13 +19,13 @@ export function createSeedCms(): CmsData {
         imageOpacity: 100,
         overlayOpacity: 60,
         titleLine1: "Salgados artesanais",
-        titleLine2: "para ocasiões memoráveis",
+        titleLine2: "para festas e encomendas",
         titleLine3: "",
         subtitle:
-          "Massa fina, recheio generoso e apresentação impecável. Cada pedido tratado como um evento único.",
+          "Massa fina, recheio caprichado e entrega no horário combinado. Pedido feito pelo site e fechado no WhatsApp.",
         ctaPrimary: "Pedir no WhatsApp",
         ctaSecondary: "Ver cardápio",
-        badges: ["Produção artesanal", "Entrega pontual", "Ingredientes frescos"],
+        badges: ["Feito na cozinha da casa", "Retirada ou entrega", "Pedido pelo WhatsApp"],
       },
       about: {
         eyebrow: "Nossa história",
@@ -30,16 +34,16 @@ export function createSeedCms(): CmsData {
         image: "/cms/sobre-cozinha.jpg",
         paragraphs: [
           "A Salgados Borges nasceu de uma cozinha de família, onde receitas eram passadas de mão em mão. Hoje, mantemos o mesmo cuidado artesanal, elevando cada detalhe ao padrão que festas e eventos exigem.",
-          "Trabalhamos com fornecedores locais, em um processo produtivo que combina higiene rigorosa, tempo de descanso das massas e apresentação impecável. Nada aqui é acelerado. Tudo é feito no ritmo certo, para chegar quente, crocante e no horário combinado.",
+          "Trabalhamos com fornecedores locais, com higiene rigorosa, tempo de descanso das massas e cuidado na montagem. Nada é feito correndo. Tudo sai no ritmo certo, para chegar quente, crocante e no horário combinado.",
         ],
         highlights: [],
       },
       productsSection: {
         eyebrow: "Cardápio",
-        title: "Uma seleção feita para",
-        titleAccent: "impressionar",
+        title: "O que temos no",
+        titleAccent: "cardápio",
         subtitle:
-          "Salgados mini, fritos, assados, kits completos e combos. Escolha, adicione ao pedido e finalize pelo WhatsApp em poucos segundos.",
+          "Salgados mini, fritos, assados, kits e combos. Escolha, monte o pedido e finalize no WhatsApp.",
       },
       howItWorks: {
         eyebrow: "Passo a passo",
@@ -47,21 +51,21 @@ export function createSeedCms(): CmsData {
         titleAccent: "à sua mesa",
       },
       features: {
-        eyebrow: "Por que escolher",
-        title: "Excelência em cada",
-        titleAccent: "detalhe",
+        eyebrow: "Por que a gente faz assim",
+        title: "Cuidado em cada",
+        titleAccent: "etapa",
       },
       gallery: {
         eyebrow: "Galeria",
-        title: "Momentos que",
-        titleAccent: "falam por si",
+        title: "Fotos da",
+        titleAccent: "produção",
         subtitle:
-          "Bastidores da produção, eventos que atendemos e o cuidado com a apresentação em cada detalhe.",
+          "Bastidores da cozinha, eventos que atendemos e o jeito que os salgados saem da bandeja.",
       },
       testimonials: {
         eyebrow: "Depoimentos",
-        title: "Quem prova",
-        titleAccent: "confia",
+        title: "O que dizem",
+        titleAccent: "quem já pediu",
       },
       faq: {
         eyebrow: "Perguntas frequentes",
@@ -70,14 +74,14 @@ export function createSeedCms(): CmsData {
       },
       contact: {
         eyebrow: "Fale conosco",
-        title: "Vamos preparar algo",
-        titleAccent: "especial",
+        title: "Quer fazer um",
+        titleAccent: "pedido?",
         subtitle:
-          "Envie sua mensagem, tire dúvidas ou solicite um orçamento personalizado. Respondemos com atenção a cada solicitação.",
+          "Mande sua mensagem, tire dúvidas ou peça um orçamento. Respondemos pelo WhatsApp ou e-mail.",
       },
       footer: {
         description:
-          "Produção artesanal de salgados premium para festas, eventos corporativos e ocasiões especiais.",
+          "Salgados artesanais para festas, eventos corporativos e encomendas do dia a dia.",
         cnpj: "CNPJ 00.000.000/0001-00",
       },
     },
@@ -90,12 +94,11 @@ export function createSeedCms(): CmsData {
       mapEmbedUrl: "https://www.google.com/maps?q=-20.4248943,-49.979195&hl=pt-BR&z=16&output=embed",
       instagramUrl: "",
       facebookUrl: "",
-      seoTitle: "Salgados Borges | Salgados artesanais premium para festas e eventos",
+      seoTitle: "Salgados Borges | Salgados artesanais em Votuporanga",
       seoDescription:
-        "Salgados Borges. Produção artesanal, ingredientes selecionados e apresentação impecável para festas, eventos corporativos e ocasiões especiais.",
+        "Salgados Borges. Produção artesanal para festas, eventos e encomendas. Peça pelo WhatsApp.",
       ogTitle: "Salgados Borges | Feito com sabor, feito pra você",
-      ogDescription:
-        "Salgados artesanais premium. Kits para festas, combos e opções fritas e assadas. Peça agora pelo WhatsApp.",
+      ogDescription: "Salgados artesanais, kits para festas e combos. Peça pelo WhatsApp.",
       sections: {
         hero: true,
         about: true,
@@ -119,6 +122,7 @@ export function createSeedCms(): CmsData {
         "faq",
         "contact",
       ],
+      orderSettings: createDefaultOrderSettings(),
     },
     categories: [
       { id: "mini", name: "Mini salgados", visible: true, order: 0 },
@@ -138,6 +142,7 @@ export function createSeedCms(): CmsData {
         image: "/cms/prod-coxinha.jpg",
         visible: true,
         order: 0,
+        fulfillmentTag: "pronta_entrega",
       },
       {
         id: "kibe-cento",
@@ -186,13 +191,14 @@ export function createSeedCms(): CmsData {
       {
         id: "kit-100",
         name: "Kit Festa 100 unidades",
-        description: "Seleção premium com coxinha, kibe, risole e esfiha. Ideal para 8 pessoas.",
+        description: "Coxinha, kibe, risole e esfiha. Serve cerca de 8 pessoas.",
         price: 179.9,
         unit: "kit",
         categoryId: "kits",
         image: "/cms/prod-kit-festa.jpg",
         visible: true,
         order: 5,
+        fulfillmentTag: "sob_encomenda",
       },
       {
         id: "kit-300",
@@ -259,7 +265,7 @@ export function createSeedCms(): CmsData {
       },
       {
         id: "faq-5",
-        question: "Aceitam pedidos personalizados?",
+        question: "Aceitam pedidos sob encomenda?",
         answer:
           "Sim. Recheios especiais, restrições alimentares e apresentações temáticas são bem-vindas.",
         visible: true,
@@ -280,7 +286,7 @@ export function createSeedCms(): CmsData {
         name: "Marina Salles",
         role: "Casamento em Ribeirão Preto",
         stars: 5,
-        text: "Os salgados foram o assunto da festa. Apresentação impecável, sabor de casa e entrega no horário exato combinado.",
+        text: "Os salgados foram o assunto da festa. Chegaram bem apresentados, com sabor de casa e no horário combinado.",
         visible: true,
         order: 0,
       },
@@ -324,7 +330,7 @@ export function createSeedCms(): CmsData {
         id: "s3",
         number: "03",
         title: "Envie pelo WhatsApp",
-        text: "Um clique gera a mensagem organizada com todos os itens.",
+        text: "A mensagem sai pronta com os itens que você escolheu.",
         visible: true,
         order: 2,
       },
@@ -362,8 +368,8 @@ export function createSeedCms(): CmsData {
       },
       {
         id: "f3",
-        title: "Custo benefício justo",
-        text: "Preço honesto para uma experiência acima da média.",
+        title: "Preço justo",
+        text: "Valor honesto pelo trabalho e pela qualidade do que entregamos.",
         visible: true,
         order: 2,
       },
@@ -387,6 +393,22 @@ export function createSeedCms(): CmsData {
         text: "Retirada agendada ou entrega no horário combinado.",
         visible: true,
         order: 5,
+      },
+    ],
+    coupons: createSampleCoupons(),
+    menuLinks: [
+      {
+        id: "menu-cardapio",
+        slug: "cardapio",
+        title: "Cardápio Salgados Borges",
+        subtitle: "Escolha os produtos e finalize pelo WhatsApp.",
+        active: true,
+        categoryIds: [],
+        productIds: [],
+        showPrices: true,
+        allowOrders: true,
+        order: 0,
+        createdAt: new Date().toISOString(),
       },
     ],
   };

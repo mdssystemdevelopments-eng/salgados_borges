@@ -19,31 +19,28 @@ function TermosUsoPage() {
   return (
     <LegalPageShell title="Termos de Uso">
       <p>
-        Ao utilizar o site da Salgados Borges, você concorda com estes termos. Se não concordar, por
-        favor não utilize nossos serviços online.
+        Ao usar o site da Salgados Borges, você concorda com estes termos. Se não concordar, por favor
+        não utilize nossos serviços online.
       </p>
       <p>
-        <strong className="text-foreground">Serviços:</strong> o site apresenta nosso cardápio,
-        informações institucionais e canais para pedidos via WhatsApp. Preços, disponibilidade e prazos
-        podem variar e serão confirmados no atendimento.
+        O site mostra nosso cardápio, informações da casa e formas de pedir pelo WhatsApp. Preços,
+        disponibilidade e prazos podem mudar e serão confirmados no atendimento.
       </p>
       <p>
-        <strong className="text-foreground">Pedidos:</strong> pedidos feitos pelo site ou WhatsApp
-        dependem de confirmação de disponibilidade, quantidade mínima e forma de pagamento acordada
-        diretamente com nossa equipe.
+        Pedidos feitos pelo site ou WhatsApp dependem de confirmação de disponibilidade, quantidade
+        mínima e forma de pagamento combinada diretamente com nossa equipe.
       </p>
       <p>
-        <strong className="text-foreground">Conteúdo:</strong> textos, imagens e marcas exibidos no site
-        pertencem à Salgados Borges ou são utilizados com autorização. É proibida a reprodução sem
-        consentimento prévio.
+        Textos, imagens e marcas exibidos aqui pertencem à Salgados Borges ou são usados com
+        autorização. Não copie nem reproduza sem nossa permissão.
       </p>
       <p>
-        <strong className="text-foreground">Limitação:</strong> empregamos esforços para manter o site
-        disponível e atualizado, mas não garantimos funcionamento ininterrupto em todos os momentos.
+        Fazemos o possível para manter o site no ar e atualizado, mas não garantimos que ele
+        funcione sem interrupção o tempo todo.
       </p>
       <p>
-        <strong className="text-foreground">Alterações:</strong> estes termos podem ser atualizados a
-        qualquer momento. Recomendamos revisá-los periodicamente.
+        Estes termos podem ser alterados quando necessário. Vale a pena reler esta página de vez em
+        quando.
       </p>
       <p>Última atualização: agosto de 2026.</p>
     </LegalPageShell>

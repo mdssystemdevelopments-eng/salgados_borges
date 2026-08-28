@@ -1,5 +1,3 @@
-import { getRequestHostname } from "./request-context";
-
 const DEFAULT_ADMIN_HOST = "admincms.salgadosborges.com.br";
 
 export function getConfiguredAdminHost(): string {
@@ -74,19 +72,6 @@ export function isAllowedOnAdminHost(pathname: string): boolean {
   if (pathname.startsWith("/cms-media/")) return true;
   if (isStaticAssetPath(pathname)) return true;
   return false;
-}
-
-export function assertAdminHost(): void {
-  const hostname = getRequestHostname();
-  if (!hostname) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("FORBIDDEN");
-    }
-    return;
-  }
-  if (!isAdminHost(hostname)) {
-    throw new Error("FORBIDDEN");
-  }
 }
 
 export function isAdminHostClient(): boolean {

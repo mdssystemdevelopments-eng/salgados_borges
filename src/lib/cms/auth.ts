@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { deleteCookie, getCookie, setCookie, getRequestIP } from "@tanstack/react-start/server";
 
-import { assertAdminHost } from "./admin-host";
+import { assertAdminHost } from "./admin-host.server";
 
 const COOKIE_NAME = "sb_cms_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 8; // 8 hours

@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import path from "node:path";
 import { createSeedCms } from "./seed";
+import { migrateCmsData } from "./migrate";
 import { withNormalizedSettings } from "./sections";
 import type { CmsData } from "./types";
 
@@ -11,7 +12,7 @@ function clampPercent(value: unknown, fallback: number): number {
 }
 
 function normalizeCms(data: CmsData): CmsData {
-  return {
+  return migrateCmsData({
     ...data,
     content: {
       ...data.content,
@@ -22,7 +23,7 @@ function normalizeCms(data: CmsData): CmsData {
       },
     },
     settings: withNormalizedSettings(data.settings),
-  };
+  });
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -134,9 +135,18 @@ export async function writeCms(data: CmsData): Promise<CmsData> {
   return writeCmsToFile(data);
 }
 
+let cmsUpdateChain: Promise<void> = Promise.resolve();
+
 export async function updateCms(mutator: (data: CmsData) => CmsData): Promise<CmsData> {
-  const current = await readCms();
-  return writeCms(mutator(current));
+  const result = cmsUpdateChain.then(async () => {
+    const current = await readCms();
+    return writeCms(mutator(current));
+  });
+  cmsUpdateChain = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
 }
 
 export function newId(prefix: string): string {

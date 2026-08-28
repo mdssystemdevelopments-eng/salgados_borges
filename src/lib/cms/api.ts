@@ -1,56 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import {
-  assertLoginAllowed,
-  clearLoginFailures,
-  clearSession,
-  createSession,
-  isAuthenticated,
-  registerLoginFailure,
-  requireAuth,
-  sleep,
-  verifyPassword,
-} from "./auth";
-import { assertAdminHost } from "./admin-host";
-import { createSeedCms } from "./seed";
-import { withNormalizedSettings } from "./sections";
-import { newId, readCms, updateCms, writeCms } from "./store";
-import { saveCmsUpload } from "./uploads";
+import { invalidatePublicCmsCache } from "./public-cache";
 import type {
   CmsCollection,
   CmsContent,
   CmsData,
+  CmsOrderSettings,
   CmsSettings,
 } from "./types";
 
+export { getPublicCms } from "./public-api";
+export { redeemCoupon, validateCoupon } from "./coupon-api";
+
 function sortByOrder<T extends { order: number }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.order - b.order);
-}
-
-function toPublicCms(data: CmsData): CmsData {
-  return {
-    ...data,
-    categories: sortByOrder(data.categories.filter((c) => c.visible)),
-    products: sortByOrder(data.products.filter((p) => p.visible)),
-    gallery: sortByOrder(data.gallery.filter((g) => g.visible)),
-    faq: sortByOrder(data.faq.filter((f) => f.visible)),
-    testimonials: sortByOrder(data.testimonials.filter((t) => t.visible)),
-    steps: sortByOrder(data.steps.filter((s) => s.visible)),
-    features: sortByOrder(data.features.filter((f) => f.visible)),
-  };
-}
-
-let publicCmsCache: { data: CmsData; at: number } | null = null;
-const PUBLIC_CMS_CACHE_MS = 30_000;
-
-function getCachedPublicCms(data: CmsData): CmsData {
-  const next = toPublicCms(data);
-  publicCmsCache = { data: next, at: Date.now() };
-  return next;
-}
-
-function invalidatePublicCmsCache(): void {
-  publicCmsCache = null;
 }
 
 function sniffImageMime(buffer: Buffer): string | null {
@@ -79,15 +42,10 @@ function sniffImageMime(buffer: Buffer): string | null {
   return null;
 }
 
-export const getPublicCms = createServerFn({ method: "GET" }).handler(async () => {
-  const now = Date.now();
-  if (publicCmsCache && now - publicCmsCache.at < PUBLIC_CMS_CACHE_MS) {
-    return publicCmsCache.data;
-  }
-  return getCachedPublicCms(await readCms());
-});
-
 export const getAdminCms = createServerFn({ method: "GET" }).handler(async () => {
+  const { assertAdminHost } = await import("./admin-host.server");
+  const { requireAuth } = await import("./auth");
+  const { readCms } = await import("./store");
   assertAdminHost();
   requireAuth();
   const data = await readCms();
@@ -100,10 +58,13 @@ export const getAdminCms = createServerFn({ method: "GET" }).handler(async () =>
     testimonials: sortByOrder(data.testimonials),
     steps: sortByOrder(data.steps),
     features: sortByOrder(data.features),
+    coupons: sortByOrder(data.coupons),
   };
 });
 
 export const getAuthStatus = createServerFn({ method: "GET" }).handler(async () => {
+  const { assertAdminHost } = await import("./admin-host.server");
+  const { isAuthenticated } = await import("./auth");
   assertAdminHost();
   return { authenticated: isAuthenticated() };
 });
@@ -116,6 +77,15 @@ export const loginAdmin = createServerFn({ method: "POST" })
     return { password: data.password };
   })
   .handler(async ({ data }) => {
+    const { assertAdminHost } = await import("./admin-host.server");
+    const {
+      assertLoginAllowed,
+      clearLoginFailures,
+      createSession,
+      registerLoginFailure,
+      sleep,
+      verifyPassword,
+    } = await import("./auth");
     assertAdminHost();
     assertLoginAllowed();
     await sleep(350);
@@ -129,6 +99,8 @@ export const loginAdmin = createServerFn({ method: "POST" })
   });
 
 export const logoutAdmin = createServerFn({ method: "POST" }).handler(async () => {
+  const { assertAdminHost } = await import("./admin-host.server");
+  const { clearSession } = await import("./auth");
   assertAdminHost();
   clearSession();
   return { ok: true as const };
@@ -137,6 +109,8 @@ export const logoutAdmin = createServerFn({ method: "POST" }).handler(async () =
 export const saveContent = createServerFn({ method: "POST" })
   .validator((data: { content: CmsContent }) => data)
   .handler(async ({ data }) => {
+    const { requireAuth } = await import("./auth");
+    const { updateCms } = await import("./store");
     requireAuth();
     invalidatePublicCmsCache();
     return updateCms((cms) => ({ ...cms, content: data.content }));
@@ -145,6 +119,9 @@ export const saveContent = createServerFn({ method: "POST" })
 export const saveSettings = createServerFn({ method: "POST" })
   .validator((data: { settings: CmsSettings }) => data)
   .handler(async ({ data }) => {
+    const { requireAuth } = await import("./auth");
+    const { updateCms } = await import("./store");
+    const { withNormalizedSettings } = await import("./sections");
     requireAuth();
     invalidatePublicCmsCache();
     return updateCms((cms) => ({
@@ -153,11 +130,30 @@ export const saveSettings = createServerFn({ method: "POST" })
     }));
   });
 
+export const saveOrderSettings = createServerFn({ method: "POST" })
+  .validator((data: { orderSettings: CmsOrderSettings }) => data)
+  .handler(async ({ data }) => {
+    const { requireAuth } = await import("./auth");
+    const { updateCms } = await import("./store");
+    const { withNormalizedSettings } = await import("./sections");
+    requireAuth();
+    invalidatePublicCmsCache();
+    return updateCms((cms) => ({
+      ...cms,
+      settings: withNormalizedSettings({
+        ...cms.settings,
+        orderSettings: data.orderSettings,
+      }),
+    }));
+  });
+
 export const upsertCollectionItem = createServerFn({ method: "POST" })
   .validator(
     (data: { collection: CmsCollection; item: Record<string, unknown> }) => data,
   )
   .handler(async ({ data }) => {
+    const { requireAuth } = await import("./auth");
+    const { newId, updateCms } = await import("./store");
     requireAuth();
     invalidatePublicCmsCache();
     return updateCms((cms) => {
@@ -172,8 +168,14 @@ export const upsertCollectionItem = createServerFn({ method: "POST" })
         item.visible = true;
       }
       const idx = list.findIndex((row) => row.id === id);
-      if (idx >= 0) list[idx] = item;
-      else list.push(item);
+      if (idx >= 0) {
+        const existing = list[idx] as Record<string, unknown>;
+        if (data.collection === "coupons") {
+          if (item.quantityUsed == null) item.quantityUsed = existing.quantityUsed ?? 0;
+          if (!Array.isArray(item.redemptions)) item.redemptions = existing.redemptions ?? [];
+        }
+        list[idx] = item;
+      } else list.push(item);
       return { ...cms, [data.collection]: list } as CmsData;
     });
   });
@@ -181,6 +183,8 @@ export const upsertCollectionItem = createServerFn({ method: "POST" })
 export const deleteCollectionItem = createServerFn({ method: "POST" })
   .validator((data: { collection: CmsCollection; id: string }) => data)
   .handler(async ({ data }) => {
+    const { requireAuth } = await import("./auth");
+    const { updateCms } = await import("./store");
     requireAuth();
     invalidatePublicCmsCache();
     return updateCms((cms) => {
@@ -192,6 +196,8 @@ export const deleteCollectionItem = createServerFn({ method: "POST" })
 export const toggleCollectionItem = createServerFn({ method: "POST" })
   .validator((data: { collection: CmsCollection; id: string }) => data)
   .handler(async ({ data }) => {
+    const { requireAuth } = await import("./auth");
+    const { updateCms } = await import("./store");
     requireAuth();
     invalidatePublicCmsCache();
     return updateCms((cms) => {
@@ -205,6 +211,8 @@ export const toggleCollectionItem = createServerFn({ method: "POST" })
 export const reorderCollection = createServerFn({ method: "POST" })
   .validator((data: { collection: CmsCollection; orderedIds: string[] }) => data)
   .handler(async ({ data }) => {
+    const { requireAuth } = await import("./auth");
+    const { updateCms } = await import("./store");
     requireAuth();
     invalidatePublicCmsCache();
     return updateCms((cms) => {
@@ -229,6 +237,9 @@ export const reorderCollection = createServerFn({ method: "POST" })
   });
 
 export const resetCmsToSeed = createServerFn({ method: "POST" }).handler(async () => {
+  const { requireAuth } = await import("./auth");
+  const { writeCms } = await import("./store");
+  const { createSeedCms } = await import("./seed");
   requireAuth();
   invalidatePublicCmsCache();
   return writeCms(createSeedCms());
@@ -246,6 +257,8 @@ export const uploadCmsImage = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
+    const { requireAuth } = await import("./auth");
+    const { saveCmsUpload } = await import("./uploads");
     requireAuth();
 
     const buffer = Buffer.from(data.base64, "base64");

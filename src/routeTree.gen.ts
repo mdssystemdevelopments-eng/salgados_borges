@@ -14,7 +14,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
 import { Route as TermosDeUsoRouteImport } from './routes/termos-de-uso'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminCardapioLabRouteImport } from './routes/admin/cardapio-lab'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as CSlugRouteImport } from './routes/c/$slug'
 import { Route as CmsMediaIdRouteImport } from './routes/cms-media/$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -42,10 +44,20 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCardapioLabRoute = AdminCardapioLabRouteImport.update({
+  id: '/cardapio-lab',
+  path: '/cardapio-lab',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AdminRoute,
+} as any)
+const CSlugRoute = CSlugRouteImport.update({
+  id: '/c/$slug',
+  path: '/c/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CmsMediaIdRoute = CmsMediaIdRouteImport.update({
   id: '/cms-media/$id',
@@ -58,7 +70,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
+  '/admin/cardapio-lab': typeof AdminCardapioLabRoute
   '/admin/login': typeof AdminLoginRoute
+  '/c/$slug': typeof CSlugRoute
   '/cms-media/$id': typeof CmsMediaIdRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -66,7 +80,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
+  '/admin/cardapio-lab': typeof AdminCardapioLabRoute
   '/admin/login': typeof AdminLoginRoute
+  '/c/$slug': typeof CSlugRoute
   '/cms-media/$id': typeof CmsMediaIdRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -76,7 +92,9 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
+  '/admin/cardapio-lab': typeof AdminCardapioLabRoute
   '/admin/login': typeof AdminLoginRoute
+  '/c/$slug': typeof CSlugRoute
   '/cms-media/$id': typeof CmsMediaIdRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -87,7 +105,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/politica-de-privacidade'
     | '/termos-de-uso'
+    | '/admin/cardapio-lab'
     | '/admin/login'
+    | '/c/$slug'
     | '/cms-media/$id'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -95,7 +115,9 @@ export interface FileRouteTypes {
     | '/'
     | '/politica-de-privacidade'
     | '/termos-de-uso'
+    | '/admin/cardapio-lab'
     | '/admin/login'
+    | '/c/$slug'
     | '/cms-media/$id'
     | '/admin'
   id:
@@ -104,7 +126,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/politica-de-privacidade'
     | '/termos-de-uso'
+    | '/admin/cardapio-lab'
     | '/admin/login'
+    | '/c/$slug'
     | '/cms-media/$id'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -114,6 +138,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   TermosDeUsoRoute: typeof TermosDeUsoRoute
+  CSlugRoute: typeof CSlugRoute
   CmsMediaIdRoute: typeof CmsMediaIdRoute
 }
 
@@ -154,12 +179,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/cardapio-lab': {
+      id: '/admin/cardapio-lab'
+      path: '/cardapio-lab'
+      fullPath: '/admin/cardapio-lab'
+      preLoaderRoute: typeof AdminCardapioLabRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/c/$slug': {
+      id: '/c/$slug'
+      path: '/c/$slug'
+      fullPath: '/c/$slug'
+      preLoaderRoute: typeof CSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/cms-media/$id': {
       id: '/cms-media/$id'
@@ -172,11 +211,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminCardapioLabRoute: typeof AdminCardapioLabRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminCardapioLabRoute: AdminCardapioLabRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -188,6 +229,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   TermosDeUsoRoute: TermosDeUsoRoute,
+  CSlugRoute: CSlugRoute,
   CmsMediaIdRoute: CmsMediaIdRoute,
 }
 export const routeTree = rootRouteImport

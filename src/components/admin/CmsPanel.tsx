@@ -37,11 +37,16 @@ import {
   ImageUploadField,
   VisibilityBadge,
 } from "./ui";
+import { CouponsSection, OrderSettingsSection, ProductPrepFields } from "./OrderAdminSections";
+import { MenuLinksSection } from "./MenuLinksSection";
 
 type SectionId =
   | "dashboard"
   | "products"
   | "categories"
+  | "coupons"
+  | "menuLinks"
+  | "orders"
   | "gallery"
   | "faq"
   | "testimonials"
@@ -55,6 +60,9 @@ const NAV: { id: SectionId; label: string }[] = [
   { id: "dashboard", label: "Visão geral" },
   { id: "products", label: "Produtos" },
   { id: "categories", label: "Categorias" },
+  { id: "coupons", label: "Cupons" },
+  { id: "menuLinks", label: "Gerar link" },
+  { id: "orders", label: "Finalização" },
   { id: "gallery", label: "Galeria" },
   { id: "faq", label: "FAQ" },
   { id: "testimonials", label: "Depoimentos" },
@@ -113,7 +121,9 @@ export function CmsPanel({ initial }: { initial: CmsData }) {
           <div className="flex h-16 items-center border-b border-border px-5">
             <div>
               <div className="font-display text-lg text-gold-gradient">CMS Admin</div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Salgados Borges</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                Salgados Borges
+              </div>
             </div>
           </div>
           <nav className="space-y-1 p-3">
@@ -180,17 +190,24 @@ export function CmsPanel({ initial }: { initial: CmsData }) {
 
           <main className="flex-1 p-4 lg:p-8">
             {section === "dashboard" ? (
-              <Dashboard cms={cms} busy={busy} onReset={() => run(() => resetCmsToSeed(), "CMS restaurado")} />
+              <Dashboard
+                cms={cms}
+                busy={busy}
+                onReset={() => run(() => resetCmsToSeed(), "CMS restaurado")}
+              />
             ) : null}
-            {section === "products" ? (
-              <ProductsSection cms={cms} busy={busy} run={run} />
-            ) : null}
+            {section === "products" ? <ProductsSection cms={cms} busy={busy} run={run} /> : null}
             {section === "categories" ? (
               <CategoriesSection cms={cms} busy={busy} run={run} />
             ) : null}
+            {section === "coupons" ? <CouponsSection cms={cms} busy={busy} run={run} /> : null}
+            {section === "menuLinks" ? <MenuLinksSection cms={cms} busy={busy} run={run} /> : null}
+            {section === "orders" ? <OrderSettingsSection cms={cms} busy={busy} run={run} /> : null}
             {section === "gallery" ? <GallerySection cms={cms} busy={busy} run={run} /> : null}
             {section === "faq" ? <FaqSection cms={cms} busy={busy} run={run} /> : null}
-            {section === "testimonials" ? <TestimonialsSection cms={cms} busy={busy} run={run} /> : null}
+            {section === "testimonials" ? (
+              <TestimonialsSection cms={cms} busy={busy} run={run} />
+            ) : null}
             {section === "steps" ? <StepsSection cms={cms} busy={busy} run={run} /> : null}
             {section === "features" ? <FeaturesSection cms={cms} busy={busy} run={run} /> : null}
             {section === "content" ? (
@@ -204,14 +221,18 @@ export function CmsPanel({ initial }: { initial: CmsData }) {
               <SettingsSection
                 settings={cms.settings}
                 busy={busy}
-                onSave={(settings) => run(() => saveSettings({ data: { settings } }), "Configurações salvas")}
+                onSave={(settings) =>
+                  run(() => saveSettings({ data: { settings } }), "Configurações salvas")
+                }
               />
             ) : null}
             {section === "visibility" ? (
               <VisibilitySection
                 settings={cms.settings}
                 busy={busy}
-                onSave={(settings) => run(() => saveSettings({ data: { settings } }), "Visibilidade atualizada")}
+                onSave={(settings) =>
+                  run(() => saveSettings({ data: { settings } }), "Visibilidade atualizada")
+                }
               />
             ) : null}
           </main>
@@ -250,10 +271,7 @@ function OrderControls({
   const saveOrder = (direction: -1 | 1) => {
     const orderedIds = moveOrderedIds(ids, id, direction);
     if (!orderedIds) return;
-    void run(
-      () => reorderCollection({ data: { collection, orderedIds } }),
-      "Ordem atualizada",
-    );
+    void run(() => reorderCollection({ data: { collection, orderedIds } }), "Ordem atualizada");
   };
 
   return (
@@ -282,15 +300,7 @@ function OrderControls({
   );
 }
 
-function Dashboard({
-  cms,
-  busy,
-  onReset,
-}: {
-  cms: CmsData;
-  busy: boolean;
-  onReset: () => void;
-}) {
+function Dashboard({ cms, busy, onReset }: { cms: CmsData; busy: boolean; onReset: () => void }) {
   const cards = [
     { label: "Produtos", value: cms.products.length },
     { label: "Categorias", value: cms.categories.length },
@@ -303,8 +313,9 @@ function Dashboard({
   return (
     <div className="space-y-8">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        Gerencie todo o conteúdo do site: produtos, textos, imagens, contato e seções visíveis. Use Subir e Descer
-        em cada lista para definir a ordem no site. As alterações aparecem na página pública após salvar.
+        Gerencie todo o conteúdo do site: produtos, textos, imagens, contato e seções visíveis. Use
+        Subir e Descer em cada lista para definir a ordem no site. As alterações aparecem na página
+        pública após salvar.
       </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
@@ -317,7 +328,8 @@ function Dashboard({
       <div className="rounded-lg border border-gold/35 bg-surface p-5 space-y-3">
         <h2 className="font-display text-2xl">Ações</h2>
         <p className="text-sm text-muted-foreground">
-          Restaurar o conteúdo original do site (seed). Isso sobrescreve o arquivo <code>data/cms.json</code>.
+          Restaurar o conteúdo original do site (seed). Isso sobrescreve o arquivo{" "}
+          <code>data/cms.json</code>.
         </p>
         <AdminButton type="button" variant="danger" disabled={busy} onClick={onReset}>
           Restaurar conteúdo inicial
@@ -327,13 +339,7 @@ function Dashboard({
   );
 }
 
-function CollectionToolbar({
-  onNew,
-  busy,
-}: {
-  onNew: () => void;
-  busy: boolean;
-}) {
+function CollectionToolbar({ onNew, busy }: { onNew: () => void; busy: boolean }) {
   return (
     <div className="mb-4 flex justify-end">
       <AdminButton type="button" disabled={busy} onClick={onNew}>
@@ -354,6 +360,11 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
     image: "",
     visible: true,
     order: cms.products.length,
+    prepMethods: ["congelado", "frito", "assado"],
+    available: true,
+    minQty: 1,
+    fulfillmentTag: null,
+    featured: false,
   };
   const [editing, setEditing] = useState<CmsProduct | null>(null);
 
@@ -388,7 +399,11 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <img src={p.image} alt="" className="h-12 w-12 rounded object-cover bg-surface-2" />
+                      <img
+                        src={p.image}
+                        alt=""
+                        className="h-12 w-12 rounded object-cover bg-surface-2"
+                      />
                       <div>
                         <div className="font-medium">{p.name}</div>
                         <div className="text-xs text-muted-foreground">{cat}</div>
@@ -396,7 +411,8 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {p.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} / {p.unit}
+                    {p.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} /{" "}
+                    {p.unit}
                   </td>
                   <td className="px-4 py-3">
                     <VisibilityBadge visible={p.visible} />
@@ -412,7 +428,8 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
                         disabled={busy}
                         onClick={() =>
                           run(
-                            () => toggleCollectionItem({ data: { collection: "products", id: p.id } }),
+                            () =>
+                              toggleCollectionItem({ data: { collection: "products", id: p.id } }),
                             p.visible ? "Produto ocultado" : "Produto visível",
                           )
                         }
@@ -426,7 +443,10 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
                         onClick={() => {
                           if (confirm("Excluir este produto?")) {
                             void run(
-                              () => deleteCollectionItem({ data: { collection: "products", id: p.id } }),
+                              () =>
+                                deleteCollectionItem({
+                                  data: { collection: "products", id: p.id },
+                                }),
                               "Produto excluído",
                             );
                           }
@@ -484,7 +504,10 @@ function ProductEditor({
     <Modal title={form.id ? "Editar produto" : "Novo produto"} onClose={onClose}>
       <div className="grid gap-4 sm:grid-cols-2">
         <AdminField label="Nome">
-          <AdminInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <AdminInput
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
         </AdminField>
         <AdminField label="Categoria">
           <AdminSelect
@@ -507,7 +530,10 @@ function ProductEditor({
           />
         </AdminField>
         <AdminField label="Unidade">
-          <AdminInput value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+          <AdminInput
+            value={form.unit}
+            onChange={(e) => setForm({ ...form, unit: e.target.value })}
+          />
         </AdminField>
         <div className="sm:col-span-2">
           <AdminField label="Descrição">
@@ -518,8 +544,13 @@ function ProductEditor({
           </AdminField>
         </div>
         <div className="sm:col-span-2">
-          <ImageUploadField label="Imagem" value={form.image} onChange={(image) => setForm({ ...form, image })} />
+          <ImageUploadField
+            label="Imagem"
+            value={form.image}
+            onChange={(image) => setForm({ ...form, image })}
+          />
         </div>
+        <ProductPrepFields form={form} setForm={setForm} />
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -547,7 +578,8 @@ function CategoriesSection({ cms, busy, run }: { cms: CmsData; busy: boolean; ru
   return (
     <div>
       <p className="mb-4 text-sm text-foreground/90">
-        Adicione, edite, oculte ou exclua as categorias do cardápio. Use Subir e Descer para definir a ordem no site.
+        Adicione, edite, oculte ou exclua as categorias do cardápio. Use Subir e Descer para definir
+        a ordem no site.
       </p>
       <CollectionToolbar
         busy={busy}
@@ -558,60 +590,65 @@ function CategoriesSection({ cms, busy, run }: { cms: CmsData; busy: boolean; ru
           Nenhuma categoria ainda. Clique em <strong>Adicionar</strong> para criar a primeira.
         </div>
       ) : (
-      <ListCard>
-        {cms.categories.map((c) => (
-          <ListRow
-            key={c.id}
-            title={c.name}
-            badge={<VisibilityBadge visible={c.visible} />}
-            actions={
-              <>
-                <OrderControls
-                  collection="categories"
-                  ids={cms.categories.map((row) => row.id)}
-                  id={c.id}
-                  busy={busy}
-                  run={run}
-                />
-                <AdminButton type="button" variant="ghost" onClick={() => setEditing(c)}>
-                  Editar
-                </AdminButton>
-                <AdminButton
-                  type="button"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={() =>
-                    run(
-                      () => toggleCollectionItem({ data: { collection: "categories", id: c.id } }),
-                      "Categoria atualizada",
-                    )
-                  }
-                >
-                  {c.visible ? "Ocultar" : "Mostrar"}
-                </AdminButton>
-                <AdminButton
-                  type="button"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={() => {
-                    if (confirm("Excluir categoria?")) {
-                      void run(
-                        () => deleteCollectionItem({ data: { collection: "categories", id: c.id } }),
-                        "Categoria excluída",
-                      );
+        <ListCard>
+          {cms.categories.map((c) => (
+            <ListRow
+              key={c.id}
+              title={c.name}
+              badge={<VisibilityBadge visible={c.visible} />}
+              actions={
+                <>
+                  <OrderControls
+                    collection="categories"
+                    ids={cms.categories.map((row) => row.id)}
+                    id={c.id}
+                    busy={busy}
+                    run={run}
+                  />
+                  <AdminButton type="button" variant="ghost" onClick={() => setEditing(c)}>
+                    Editar
+                  </AdminButton>
+                  <AdminButton
+                    type="button"
+                    variant="ghost"
+                    disabled={busy}
+                    onClick={() =>
+                      run(
+                        () =>
+                          toggleCollectionItem({ data: { collection: "categories", id: c.id } }),
+                        "Categoria atualizada",
+                      )
                     }
-                  }}
-                >
-                  Excluir
-                </AdminButton>
-              </>
-            }
-          />
-        ))}
-      </ListCard>
+                  >
+                    {c.visible ? "Ocultar" : "Mostrar"}
+                  </AdminButton>
+                  <AdminButton
+                    type="button"
+                    variant="ghost"
+                    disabled={busy}
+                    onClick={() => {
+                      if (confirm("Excluir categoria?")) {
+                        void run(
+                          () =>
+                            deleteCollectionItem({ data: { collection: "categories", id: c.id } }),
+                          "Categoria excluída",
+                        );
+                      }
+                    }}
+                  >
+                    Excluir
+                  </AdminButton>
+                </>
+              }
+            />
+          ))}
+        </ListCard>
       )}
       {editing ? (
-        <Modal title={editing.id ? "Editar categoria" : "Nova categoria"} onClose={() => setEditing(null)}>
+        <Modal
+          title={editing.id ? "Editar categoria" : "Nova categoria"}
+          onClose={() => setEditing(null)}
+        >
           <AdminField label="Nome">
             <AdminInput
               value={editing.name}
@@ -628,7 +665,10 @@ function CategoriesSection({ cms, busy, run }: { cms: CmsData; busy: boolean; ru
               onClick={() =>
                 run(async () => {
                   const next = await upsertCollectionItem({
-                    data: { collection: "categories", item: editing as unknown as Record<string, unknown> },
+                    data: {
+                      collection: "categories",
+                      item: editing as unknown as Record<string, unknown>,
+                    },
                   });
                   setEditing(null);
                   return next;
@@ -706,7 +746,10 @@ function GallerySection({ cms, busy, run }: { cms: CmsData; busy: boolean; run: 
         ))}
       </div>
       {editing ? (
-        <Modal title={editing.id ? "Editar imagem" : "Nova imagem"} onClose={() => setEditing(null)}>
+        <Modal
+          title={editing.id ? "Editar imagem" : "Nova imagem"}
+          onClose={() => setEditing(null)}
+        >
           <div className="space-y-4">
             <ImageUploadField
               label="Imagem"
@@ -730,7 +773,10 @@ function GallerySection({ cms, busy, run }: { cms: CmsData; busy: boolean; run: 
               onClick={() =>
                 run(async () => {
                   const next = await upsertCollectionItem({
-                    data: { collection: "gallery", item: editing as unknown as Record<string, unknown> },
+                    data: {
+                      collection: "gallery",
+                      item: editing as unknown as Record<string, unknown>,
+                    },
                   });
                   setEditing(null);
                   return next;
@@ -866,10 +912,16 @@ function FaqSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run: RunF
       renderFields={(item, setItem) => (
         <>
           <AdminField label="Pergunta">
-            <AdminInput value={item.question} onChange={(e) => setItem({ ...item, question: e.target.value })} />
+            <AdminInput
+              value={item.question}
+              onChange={(e) => setItem({ ...item, question: e.target.value })}
+            />
           </AdminField>
           <AdminField label="Resposta">
-            <AdminTextarea value={item.answer} onChange={(e) => setItem({ ...item, answer: e.target.value })} />
+            <AdminTextarea
+              value={item.answer}
+              onChange={(e) => setItem({ ...item, answer: e.target.value })}
+            />
           </AdminField>
         </>
       )}
@@ -897,10 +949,16 @@ function TestimonialsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; 
       renderFields={(item, setItem) => (
         <>
           <AdminField label="Nome">
-            <AdminInput value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} />
+            <AdminInput
+              value={item.name}
+              onChange={(e) => setItem({ ...item, name: e.target.value })}
+            />
           </AdminField>
           <AdminField label="Papel / evento">
-            <AdminInput value={item.role} onChange={(e) => setItem({ ...item, role: e.target.value })} />
+            <AdminInput
+              value={item.role}
+              onChange={(e) => setItem({ ...item, role: e.target.value })}
+            />
           </AdminField>
           <AdminField label="Estrelas (1-5)">
             <AdminInput
@@ -912,7 +970,10 @@ function TestimonialsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; 
             />
           </AdminField>
           <AdminField label="Depoimento">
-            <AdminTextarea value={item.text} onChange={(e) => setItem({ ...item, text: e.target.value })} />
+            <AdminTextarea
+              value={item.text}
+              onChange={(e) => setItem({ ...item, text: e.target.value })}
+            />
           </AdminField>
         </>
       )}
@@ -939,13 +1000,22 @@ function StepsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run: Ru
       renderFields={(item, setItem) => (
         <>
           <AdminField label="Número">
-            <AdminInput value={item.number} onChange={(e) => setItem({ ...item, number: e.target.value })} />
+            <AdminInput
+              value={item.number}
+              onChange={(e) => setItem({ ...item, number: e.target.value })}
+            />
           </AdminField>
           <AdminField label="Título">
-            <AdminInput value={item.title} onChange={(e) => setItem({ ...item, title: e.target.value })} />
+            <AdminInput
+              value={item.title}
+              onChange={(e) => setItem({ ...item, title: e.target.value })}
+            />
           </AdminField>
           <AdminField label="Texto">
-            <AdminTextarea value={item.text} onChange={(e) => setItem({ ...item, text: e.target.value })} />
+            <AdminTextarea
+              value={item.text}
+              onChange={(e) => setItem({ ...item, text: e.target.value })}
+            />
           </AdminField>
         </>
       )}
@@ -971,10 +1041,16 @@ function FeaturesSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
       renderFields={(item, setItem) => (
         <>
           <AdminField label="Título">
-            <AdminInput value={item.title} onChange={(e) => setItem({ ...item, title: e.target.value })} />
+            <AdminInput
+              value={item.title}
+              onChange={(e) => setItem({ ...item, title: e.target.value })}
+            />
           </AdminField>
           <AdminField label="Texto">
-            <AdminTextarea value={item.text} onChange={(e) => setItem({ ...item, text: e.target.value })} />
+            <AdminTextarea
+              value={item.text}
+              onChange={(e) => setItem({ ...item, text: e.target.value })}
+            />
           </AdminField>
         </>
       )}
@@ -1038,7 +1114,8 @@ function ContentSection({
       <section className="space-y-4 rounded-lg border border-gold/35 bg-surface p-5">
         <h2 className="font-display text-2xl">Hero</h2>
         <p className="text-sm text-muted-foreground">
-          A imagem de fundo aparece atrás do logo e dos textos. Depois de enviar, clique em Salvar textos.
+          A imagem de fundo aparece atrás do logo e dos textos. Depois de enviar, clique em Salvar
+          textos.
         </p>
         <ImageUploadField
           label="Imagem de fundo"
@@ -1086,37 +1163,49 @@ function ContentSection({
         <AdminField label="Título linha 1">
           <AdminInput
             value={form.hero.titleLine1}
-            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, titleLine1: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, hero: { ...form.hero, titleLine1: e.target.value } })
+            }
           />
         </AdminField>
         <AdminField label="Título linha 2">
           <AdminInput
             value={form.hero.titleLine2}
-            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, titleLine2: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, hero: { ...form.hero, titleLine2: e.target.value } })
+            }
           />
         </AdminField>
         <AdminField label="Título linha 3">
           <AdminInput
             value={form.hero.titleLine3}
-            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, titleLine3: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, hero: { ...form.hero, titleLine3: e.target.value } })
+            }
           />
         </AdminField>
         <AdminField label="Subtítulo">
           <AdminTextarea
             value={form.hero.subtitle}
-            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, subtitle: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, hero: { ...form.hero, subtitle: e.target.value } })
+            }
           />
         </AdminField>
         <AdminField label="CTA principal">
           <AdminInput
             value={form.hero.ctaPrimary}
-            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, ctaPrimary: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, hero: { ...form.hero, ctaPrimary: e.target.value } })
+            }
           />
         </AdminField>
         <AdminField label="CTA secundário">
           <AdminInput
             value={form.hero.ctaSecondary}
-            onChange={(e) => updateForm({ ...form, hero: { ...form.hero, ctaSecondary: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, hero: { ...form.hero, ctaSecondary: e.target.value } })
+            }
           />
         </AdminField>
         <AdminField label="Badges (separados por |)">
@@ -1127,7 +1216,10 @@ function ContentSection({
                 ...form,
                 hero: {
                   ...form.hero,
-                  badges: e.target.value.split("|").map((s) => s.trim()).filter(Boolean),
+                  badges: e.target.value
+                    .split("|")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
                 },
               })
             }
@@ -1140,19 +1232,25 @@ function ContentSection({
         <AdminField label="Eyebrow">
           <AdminInput
             value={form.about.eyebrow}
-            onChange={(e) => updateForm({ ...form, about: { ...form.about, eyebrow: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, about: { ...form.about, eyebrow: e.target.value } })
+            }
           />
         </AdminField>
         <AdminField label="Título">
           <AdminInput
             value={form.about.title}
-            onChange={(e) => updateForm({ ...form, about: { ...form.about, title: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, about: { ...form.about, title: e.target.value } })
+            }
           />
         </AdminField>
         <AdminField label="Título destaque">
           <AdminInput
             value={form.about.titleAccent}
-            onChange={(e) => updateForm({ ...form, about: { ...form.about, titleAccent: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, about: { ...form.about, titleAccent: e.target.value } })
+            }
           />
         </AdminField>
         <ImageUploadField
@@ -1221,7 +1319,9 @@ function ContentSection({
             <AdminField label="Título">
               <AdminInput
                 value={block.title}
-                onChange={(e) => updateForm({ ...form, [key]: { ...block, title: e.target.value } })}
+                onChange={(e) =>
+                  updateForm({ ...form, [key]: { ...block, title: e.target.value } })
+                }
               />
             </AdminField>
             <AdminField label="Título destaque">
@@ -1259,7 +1359,9 @@ function ContentSection({
         <AdminField label="CNPJ">
           <AdminInput
             value={form.footer.cnpj}
-            onChange={(e) => updateForm({ ...form, footer: { ...form.footer, cnpj: e.target.value } })}
+            onChange={(e) =>
+              updateForm({ ...form, footer: { ...form.footer, cnpj: e.target.value } })
+            }
           />
         </AdminField>
       </section>
@@ -1286,19 +1388,34 @@ function SettingsSection({
   return (
     <div className="mx-auto max-w-2xl space-y-4 rounded-lg border border-gold/35 bg-surface p-5">
       <AdminField label="WhatsApp (somente dígitos com DDI)" hint="Ex: 5517996604289">
-        <AdminInput value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+        <AdminInput
+          value={form.whatsapp}
+          onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+        />
       </AdminField>
       <AdminField label="Telefone exibido">
-        <AdminInput value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        <AdminInput
+          value={form.phone}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+        />
       </AdminField>
       <AdminField label="E-mail">
-        <AdminInput value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        <AdminInput
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
       </AdminField>
       <AdminField label="Endereço">
-        <AdminInput value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+        <AdminInput
+          value={form.address}
+          onChange={(e) => setForm({ ...form, address: e.target.value })}
+        />
       </AdminField>
       <AdminField label="Horário">
-        <AdminInput value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} />
+        <AdminInput
+          value={form.hours}
+          onChange={(e) => setForm({ ...form, hours: e.target.value })}
+        />
       </AdminField>
       <AdminField label="URL do mapa (iframe)">
         <AdminInput
@@ -1320,7 +1437,10 @@ function SettingsSection({
       </AdminField>
       <hr className="border-border" />
       <AdminField label="SEO Title">
-        <AdminInput value={form.seoTitle} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} />
+        <AdminInput
+          value={form.seoTitle}
+          onChange={(e) => setForm({ ...form, seoTitle: e.target.value })}
+        />
       </AdminField>
       <AdminField label="SEO Description">
         <AdminTextarea
@@ -1329,7 +1449,10 @@ function SettingsSection({
         />
       </AdminField>
       <AdminField label="OG Title">
-        <AdminInput value={form.ogTitle} onChange={(e) => setForm({ ...form, ogTitle: e.target.value })} />
+        <AdminInput
+          value={form.ogTitle}
+          onChange={(e) => setForm({ ...form, ogTitle: e.target.value })}
+        />
       </AdminField>
       <AdminField label="OG Description">
         <AdminTextarea
@@ -1477,7 +1600,12 @@ function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="Fechar" onClick={onClose} />
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        aria-label="Fechar"
+        onClick={onClose}
+      />
       <div className="relative z-10 max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-xl border border-gold/35 bg-background p-5 sm:rounded-xl sm:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl">{title}</h2>
@@ -1492,7 +1620,11 @@ function Modal({
 }
 
 function ListCard({ children }: { children: React.ReactNode }) {
-  return <div className="divide-y divide-border overflow-hidden rounded-lg border border-gold/35 bg-surface">{children}</div>;
+  return (
+    <div className="divide-y divide-border overflow-hidden rounded-lg border border-gold/35 bg-surface">
+      {children}
+    </div>
+  );
 }
 
 function ListRow({

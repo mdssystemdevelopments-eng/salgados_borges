@@ -16,7 +16,7 @@ export function renderAdminAccessDeniedPage(): string {
   </head>
   <body>
     <div class="card">
-      <h1>404 — Página não encontrada</h1>
+      <h1>Página não encontrada</h1>
       <p>O endereço solicitado não existe ou não está disponível neste site.</p>
       <a href="/">Voltar ao início</a>
     </div>

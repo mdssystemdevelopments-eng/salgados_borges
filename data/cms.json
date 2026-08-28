@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "updatedAt": "2026-07-21T20:23:07.600Z",
+  "version": 2,
+  "updatedAt": "2026-08-28T23:14:01.060Z",
   "content": {
     "brandName": "Salgados Borges",
     "brandTagline": "Salgados artesanais",
@@ -10,15 +10,15 @@
       "imageOpacity": 100,
       "overlayOpacity": 60,
       "titleLine1": "Salgados artesanais",
-      "titleLine2": "para ocasiões memoráveis",
+      "titleLine2": "para festas e encomendas",
       "titleLine3": "",
-      "subtitle": "Massa fina, recheio generoso e apresentação impecável. Cada pedido tratado como um evento único.",
+      "subtitle": "Massa fina, recheio caprichado e entrega no horário combinado. Pedido feito pelo site e fechado no WhatsApp.",
       "ctaPrimary": "Pedir no WhatsApp",
       "ctaSecondary": "Ver cardápio",
       "badges": [
-        "Produção artesanal",
-        "Entrega pontual",
-        "Ingredientes frescos"
+        "Feito na cozinha da casa",
+        "Retirada ou entrega",
+        "Pedido pelo WhatsApp"
       ]
     },
     "about": {
@@ -28,15 +28,15 @@
       "image": "/cms/sobre-cozinha.jpg",
       "paragraphs": [
         "A Salgados Borges nasceu de uma cozinha de família, onde receitas eram passadas de mão em mão. Hoje, mantemos o mesmo cuidado artesanal, elevando cada detalhe ao padrão que festas e eventos exigem.",
-        "Trabalhamos com fornecedores locais, em um processo produtivo que combina higiene rigorosa, tempo de descanso das massas e apresentação impecável. Nada aqui é acelerado. Tudo é feito no ritmo certo, para chegar quente, crocante e no horário combinado."
+        "Trabalhamos com fornecedores locais, com higiene rigorosa, tempo de descanso das massas e cuidado na montagem. Nada é feito correndo. Tudo sai no ritmo certo, para chegar quente, crocante e no horário combinado."
       ],
       "highlights": []
     },
     "productsSection": {
       "eyebrow": "Cardápio",
-      "title": "Uma seleção feita para",
-      "titleAccent": "impressionar",
-      "subtitle": "Salgados mini, fritos, assados, kits completos e combos. Escolha, adicione ao pedido e finalize pelo WhatsApp em poucos segundos."
+      "title": "O que temos no",
+      "titleAccent": "cardápio",
+      "subtitle": "Salgados mini, fritos, assados, kits e combos. Escolha, monte o pedido e finalize no WhatsApp."
     },
     "howItWorks": {
       "eyebrow": "Passo a passo",
@@ -44,20 +44,20 @@
       "titleAccent": "à sua mesa"
     },
     "features": {
-      "eyebrow": "Por que escolher",
-      "title": "Excelência em cada",
-      "titleAccent": "detalhe"
+      "eyebrow": "Por que a gente faz assim",
+      "title": "Cuidado em cada",
+      "titleAccent": "etapa"
     },
     "gallery": {
       "eyebrow": "Galeria",
-      "title": "Momentos que",
-      "titleAccent": "falam por si",
-      "subtitle": "Bastidores da produção, eventos que atendemos e o cuidado com a apresentação em cada detalhe."
+      "title": "Fotos da",
+      "titleAccent": "produção",
+      "subtitle": "Bastidores da cozinha, eventos que atendemos e o jeito que os salgados saem da bandeja."
     },
     "testimonials": {
       "eyebrow": "Depoimentos",
-      "title": "Quem prova",
-      "titleAccent": "confia"
+      "title": "O que dizem",
+      "titleAccent": "quem já pediu"
     },
     "faq": {
       "eyebrow": "Perguntas frequentes",
@@ -66,12 +66,12 @@
     },
     "contact": {
       "eyebrow": "Fale conosco",
-      "title": "Vamos preparar algo",
-      "titleAccent": "especial",
-      "subtitle": "Envie sua mensagem, tire dúvidas ou solicite um orçamento personalizado. Respondemos com atenção a cada solicitação."
+      "title": "Quer fazer um",
+      "titleAccent": "pedido?",
+      "subtitle": "Mande sua mensagem, tire dúvidas ou peça um orçamento. Respondemos pelo WhatsApp ou e-mail."
     },
     "footer": {
-      "description": "Produção artesanal de salgados premium para festas, eventos corporativos e ocasiões especiais.",
+      "description": "Salgados artesanais para festas, eventos corporativos e encomendas do dia a dia.",
       "cnpj": "CNPJ 00.000.000/0001-00"
     }
   },
@@ -84,10 +84,10 @@
     "mapEmbedUrl": "https://www.google.com/maps?q=-20.4248943,-49.979195&hl=pt-BR&z=16&output=embed",
     "instagramUrl": "",
     "facebookUrl": "",
-    "seoTitle": "Salgados Borges | Salgados artesanais premium para festas e eventos",
-    "seoDescription": "Salgados Borges. Produção artesanal, ingredientes selecionados e apresentação impecável para festas, eventos corporativos e ocasiões especiais.",
+    "seoTitle": "Salgados Borges | Salgados artesanais em Votuporanga",
+    "seoDescription": "Salgados Borges. Produção artesanal para festas, eventos e encomendas. Peça pelo WhatsApp.",
     "ogTitle": "Salgados Borges | Feito com sabor, feito pra você",
-    "ogDescription": "Salgados artesanais premium. Kits para festas, combos e opções fritas e assadas. Peça agora pelo WhatsApp.",
+    "ogDescription": "Salgados artesanais, kits para festas e combos. Peça pelo WhatsApp.",
     "sections": {
       "hero": true,
       "about": true,
@@ -110,7 +110,170 @@
       "testimonials",
       "faq",
       "contact"
-    ]
+    ],
+    "orderSettings": {
+      "enabled": true,
+      "allowDelivery": true,
+      "allowPickup": true,
+      "delivery": {
+        "enabled": true,
+        "feeMode": "free",
+        "fixedFee": 0,
+        "instructions": "Entregamos em Votuporanga e região. O valor final do frete pode ser confirmado no WhatsApp.",
+        "regions": []
+      },
+      "pickup": {
+        "enabled": true,
+        "address": "R. Tietê, 2870, Santa Eliza, Votuporanga, SP",
+        "hours": "Terça a domingo, das 8h às 20h",
+        "instructions": "Retirada com horário agendado. Avise quando chegar.",
+        "notes": ""
+      },
+      "schedule": {
+        "minLeadDays": 1,
+        "allowSameDay": false,
+        "availableWeekdays": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "blockedDates": [],
+        "timeSlots": [
+          {
+            "id": "t1",
+            "label": "08:00 a 10:00",
+            "start": "08:00",
+            "end": "10:00",
+            "enabled": true
+          },
+          {
+            "id": "t2",
+            "label": "10:00 a 12:00",
+            "start": "10:00",
+            "end": "12:00",
+            "enabled": true
+          },
+          {
+            "id": "t3",
+            "label": "12:00 a 14:00",
+            "start": "12:00",
+            "end": "14:00",
+            "enabled": true
+          },
+          {
+            "id": "t4",
+            "label": "14:00 a 16:00",
+            "start": "14:00",
+            "end": "16:00",
+            "enabled": true
+          },
+          {
+            "id": "t5",
+            "label": "16:00 a 18:00",
+            "start": "16:00",
+            "end": "18:00",
+            "enabled": true
+          }
+        ],
+        "blockedTimeSlotIds": []
+      },
+      "paymentMethods": [
+        {
+          "id": "pix",
+          "label": "Pix",
+          "enabled": true,
+          "order": 0
+        },
+        {
+          "id": "dinheiro",
+          "label": "Dinheiro",
+          "enabled": true,
+          "order": 1
+        },
+        {
+          "id": "credito",
+          "label": "Cartão de crédito",
+          "enabled": true,
+          "order": 2
+        },
+        {
+          "id": "debito",
+          "label": "Cartão de débito",
+          "enabled": true,
+          "order": 3
+        }
+      ],
+      "checkoutTexts": {
+        "cartTitle": "Seu carrinho",
+        "cartEmpty": "Seu carrinho está vazio.",
+        "cartContinue": "Ver cardápio",
+        "cartSubtotal": "Subtotal",
+        "cartDiscount": "Desconto",
+        "cartDeliveryFee": "Taxa de entrega",
+        "cartTotal": "Total",
+        "couponQuestion": "Possui um cupom de desconto?",
+        "couponPlaceholder": "Digite seu cupom",
+        "couponApply": "Aplicar",
+        "couponApplied": "Cupom aplicado",
+        "couponInvalid": "Cupom inválido. Verifique o código e tente novamente.",
+        "couponExpired": "Este cupom expirou.",
+        "couponExhausted": "Este cupom não está mais disponível.",
+        "couponAlreadyUsed": "Você não pode utilizar este cupom novamente.",
+        "couponMinOrder": "Valor mínimo do pedido não atingido para este cupom.",
+        "checkoutStart": "Finalizar pedido",
+        "stepFulfillment": "Como você deseja receber?",
+        "stepDelivery": "Entrega",
+        "stepPickup": "Retirada",
+        "stepDeliveryAddress": "Endereço de entrega",
+        "stepPickupInfo": "Retirada no local",
+        "stepDate": "Data desejada",
+        "stepTime": "Horário",
+        "stepPayment": "Como você deseja pagar?",
+        "stepCustomer": "Seus dados",
+        "stepReview": "Confirme seu pedido",
+        "fieldName": "Nome",
+        "fieldPhone": "Telefone",
+        "fieldCep": "CEP",
+        "fieldAddress": "Endereço",
+        "fieldNumber": "Número",
+        "fieldComplement": "Complemento",
+        "fieldDistrict": "Bairro",
+        "fieldReference": "Referência",
+        "fieldNotes": "Observações",
+        "fieldObservations": "Observações do pedido",
+        "changeQuestion": "Precisa de troco?",
+        "changeNo": "Não",
+        "changeYes": "Sim",
+        "changeFor": "Troco para quanto?",
+        "btnBack": "Voltar",
+        "btnNext": "Continuar",
+        "btnSendWhatsapp": "Enviar pedido pelo WhatsApp",
+        "btnAddToCart": "Adicionar ao carrinho",
+        "prepLabel": "Forma de preparo",
+        "qtyLabel": "Quantidade",
+        "searchPlaceholder": "Buscar no cardápio",
+        "unavailable": "Indisponível",
+        "featured": "Destaque",
+        "minQtyHint": "Quantidade mínima",
+        "maxQtyHint": "Quantidade máxima",
+        "ordersDisabled": "Pedidos online temporariamente indisponíveis. Fale conosco pelo WhatsApp.",
+        "dateUnavailable": "Esta data não está disponível.",
+        "timeUnavailable": "Este horário não está disponível.",
+        "phoneInvalid": "Informe um telefone válido com DDD.",
+        "requiredField": "Preencha os campos obrigatórios.",
+        "reviewProducts": "Produtos",
+        "reviewFulfillment": "Recebimento",
+        "reviewDate": "Data",
+        "reviewTime": "Horário",
+        "reviewPayment": "Pagamento",
+        "reviewCustomer": "Cliente",
+        "reviewTotals": "Valores"
+      }
+    }
   },
   "categories": [
     {
@@ -150,88 +313,187 @@
       "name": "Coxinha de frango cremosa",
       "description": "Massa fina e crocante, recheio de frango desfiado com catupiry artesanal.",
       "price": 89.9,
+      "promoPrice": null,
       "unit": "cento",
       "categoryId": "mini",
       "image": "/cms/prod-coxinha.jpg",
       "visible": true,
-      "order": 0
+      "order": 0,
+      "featured": false,
+      "minQty": 1,
+      "maxQty": null,
+      "available": true,
+      "prepMethods": [
+        "congelado",
+        "frito"
+      ],
+      "fulfillmentTag": "pronta_entrega",
+      "notes": "",
+      "extraInfo": ""
     },
     {
       "id": "kibe-cento",
       "name": "Kibe libanês",
       "description": "Trigo selecionado, carne bovina temperada com hortelã fresca e especiarias.",
       "price": 94.9,
+      "promoPrice": null,
       "unit": "cento",
       "categoryId": "fritos",
       "image": "/cms/prod-kibe.jpg",
       "visible": true,
-      "order": 1
+      "order": 1,
+      "featured": false,
+      "minQty": 1,
+      "maxQty": null,
+      "available": true,
+      "prepMethods": [
+        "congelado",
+        "frito"
+      ],
+      "fulfillmentTag": null,
+      "notes": "",
+      "extraInfo": ""
     },
     {
       "id": "risole-cento",
       "name": "Risole de queijo com presunto",
       "description": "Massa dourada, muçarela derretida e presunto de primeira linha.",
       "price": 89.9,
+      "promoPrice": null,
       "unit": "cento",
       "categoryId": "fritos",
       "image": "/cms/prod-risole.jpg",
       "visible": true,
-      "order": 2
+      "order": 2,
+      "featured": false,
+      "minQty": 1,
+      "maxQty": null,
+      "available": true,
+      "prepMethods": [
+        "congelado",
+        "frito"
+      ],
+      "fulfillmentTag": null,
+      "notes": "",
+      "extraInfo": ""
     },
     {
       "id": "esfiha-cento",
       "name": "Esfiha aberta de carne",
       "description": "Massa levemente doce, carne bovina moída na hora, cebola e limão siciliano.",
       "price": 99.9,
+      "promoPrice": null,
       "unit": "cento",
       "categoryId": "assados",
       "image": "/cms/prod-esfiha.jpg",
       "visible": true,
-      "order": 3
+      "order": 3,
+      "featured": false,
+      "minQty": 1,
+      "maxQty": null,
+      "available": true,
+      "prepMethods": [
+        "congelado",
+        "assado"
+      ],
+      "fulfillmentTag": null,
+      "notes": "",
+      "extraInfo": ""
     },
     {
       "id": "empada-cento",
       "name": "Empada de palmito",
       "description": "Massa amanteigada, recheio cremoso de palmito pupunha e ervas frescas.",
       "price": 109.9,
+      "promoPrice": null,
       "unit": "cento",
       "categoryId": "assados",
       "image": "/cms/prod-empada.jpg",
       "visible": true,
-      "order": 4
+      "order": 4,
+      "featured": false,
+      "minQty": 1,
+      "maxQty": null,
+      "available": true,
+      "prepMethods": [
+        "congelado",
+        "assado"
+      ],
+      "fulfillmentTag": null,
+      "notes": "",
+      "extraInfo": ""
     },
     {
       "id": "kit-100",
       "name": "Kit Festa 100 unidades",
-      "description": "Seleção premium com coxinha, kibe, risole e esfiha. Ideal para 8 pessoas.",
+      "description": "Coxinha, kibe, risole e esfiha. Serve cerca de 8 pessoas.",
       "price": 179.9,
+      "promoPrice": null,
       "unit": "kit",
       "categoryId": "kits",
       "image": "/cms/prod-kit-festa.jpg",
       "visible": true,
-      "order": 5
+      "order": 5,
+      "featured": false,
+      "minQty": 1,
+      "maxQty": null,
+      "available": true,
+      "prepMethods": [
+        "congelado",
+        "frito",
+        "assado"
+      ],
+      "fulfillmentTag": null,
+      "notes": "",
+      "extraInfo": ""
     },
     {
       "id": "kit-300",
       "name": "Kit Celebração 300 unidades",
       "description": "Sortimento completo dos nossos salgados assinatura. Ideal para 25 pessoas.",
       "price": 489.9,
+      "promoPrice": null,
       "unit": "kit",
       "categoryId": "kits",
       "image": "/cms/prod-kit-festa.jpg",
       "visible": true,
-      "order": 6
+      "order": 6,
+      "featured": false,
+      "minQty": 1,
+      "maxQty": null,
+      "available": true,
+      "prepMethods": [
+        "congelado",
+        "frito",
+        "assado"
+      ],
+      "fulfillmentTag": null,
+      "notes": "",
+      "extraInfo": ""
     },
     {
       "id": "combo-degusta",
       "name": "Combo Degustação",
       "description": "50 mini salgados variados para conhecer nossa linha completa.",
       "price": 109.9,
+      "promoPrice": null,
       "unit": "combo",
       "categoryId": "combos",
       "image": "/cms/prod-combo.jpg",
       "visible": true,
-      "order": 7
+      "order": 7,
+      "featured": false,
+      "minQty": 1,
+      "maxQty": null,
+      "available": true,
+      "prepMethods": [
+        "congelado",
+        "frito",
+        "assado"
+      ],
+      "fulfillmentTag": null,
+      "notes": "",
+      "extraInfo": ""
     }
   ],
   "gallery": [
@@ -309,7 +571,7 @@
     },
     {
       "id": "faq-5",
-      "question": "Aceitam pedidos personalizados?",
+      "question": "Aceitam pedidos sob encomenda?",
       "answer": "Sim. Recheios especiais, restrições alimentares e apresentações temáticas são bem-vindas.",
       "visible": true,
       "order": 4
@@ -328,7 +590,7 @@
       "name": "Marina Salles",
       "role": "Casamento em Ribeirão Preto",
       "stars": 5,
-      "text": "Os salgados foram o assunto da festa. Apresentação impecável, sabor de casa e entrega no horário exato combinado.",
+      "text": "Os salgados foram o assunto da festa. Chegaram bem apresentados, com sabor de casa e no horário combinado.",
       "visible": true,
       "order": 0
     },
@@ -372,7 +634,7 @@
       "id": "s3",
       "number": "03",
       "title": "Envie pelo WhatsApp",
-      "text": "Um clique gera a mensagem organizada com todos os itens.",
+      "text": "A mensagem sai pronta com os itens que você escolheu.",
       "visible": true,
       "order": 2
     },
@@ -410,8 +672,8 @@
     },
     {
       "id": "f3",
-      "title": "Custo benefício justo",
-      "text": "Preço honesto para uma experiência acima da média.",
+      "title": "Preço justo",
+      "text": "Valor honesto pelo trabalho e pela qualidade do que entregamos.",
       "visible": true,
       "order": 2
     },
@@ -435,6 +697,48 @@
       "text": "Retirada agendada ou entrega no horário combinado.",
       "visible": true,
       "order": 5
+    }
+  ],
+  "coupons": [
+    {
+      "id": "cup-borges10",
+      "code": "BORGES10",
+      "description": "10% de desconto na primeira encomenda",
+      "discountType": "percent",
+      "discountValue": 10,
+      "quantityAvailable": 100,
+      "quantityUsed": 0,
+      "limitPerCustomer": 1,
+      "minOrderValue": 80,
+      "startsAt": null,
+      "endsAt": null,
+      "productIds": [],
+      "categoryIds": [],
+      "active": true,
+      "visible": true,
+      "order": 0,
+      "redemptions": []
+    }
+  ],
+  "menuLinks": [
+    {
+      "id": "men-mtdkj36l-i769z",
+      "slug": "cardarioonline",
+      "title": "Salgados Borges",
+      "subtitle": "Peça pelo WhatsApp",
+      "active": true,
+      "categoryIds": [
+        "mini",
+        "fritos",
+        "assados",
+        "kits",
+        "combos"
+      ],
+      "productIds": [],
+      "showPrices": true,
+      "allowOrders": true,
+      "order": 0,
+      "createdAt": "2026-08-28T23:13:02.754Z"
     }
   ]
 }

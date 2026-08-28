@@ -1,13 +1,34 @@
+export type PrepMethod = "congelado" | "frito" | "assado";
+
+/** Disponibilidade / prazo do produto no cardápio. */
+export type ProductFulfillmentTag =
+  | "pronta_entrega"
+  | "sob_encomenda"
+  | "encomenda_24h"
+  | "encomenda_48h"
+  | "apenas_retirada";
+
 export type CmsProduct = {
   id: string;
   name: string;
   description: string;
   price: number;
+  /** Preço promocional; quando definido e menor que price, usa este valor. */
+  promoPrice?: number | null;
   unit: string;
   categoryId: string;
   image: string;
   visible: boolean;
   order: number;
+  featured?: boolean;
+  minQty?: number;
+  maxQty?: number | null;
+  available?: boolean;
+  prepMethods?: PrepMethod[];
+  /** Etiqueta de pronta entrega, encomenda etc. exibida no cardápio. */
+  fulfillmentTag?: ProductFulfillmentTag | null;
+  notes?: string;
+  extraInfo?: string;
 };
 
 export type CmsCategory = {
@@ -60,6 +81,170 @@ export type CmsFeature = {
   order: number;
 };
 
+export type CouponDiscountType = "percent" | "fixed";
+
+export type CmsCoupon = {
+  id: string;
+  code: string;
+  description: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  /** Quantas vezes o cupom pode ser usado no total. */
+  quantityAvailable: number;
+  quantityUsed: number;
+  /** Quantas vezes o mesmo telefone pode usar; null = sem limite por cliente. */
+  limitPerCustomer: number | null;
+  minOrderValue: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  productIds: string[];
+  categoryIds: string[];
+  active: boolean;
+  visible: boolean;
+  order: number;
+  /** Uso registrado no servidor (telefone normalizado). */
+  redemptions?: CouponRedemption[];
+};
+
+export type CouponRedemption = {
+  phone: string;
+  redeemedAt: string;
+};
+
+export type CmsMenuLink = {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  active: boolean;
+  categoryIds: string[];
+  productIds: string[];
+  showPrices: boolean;
+  allowOrders: boolean;
+  order: number;
+  createdAt: string;
+};
+
+export type DeliveryFeeMode = "free" | "fixed";
+
+export type CmsDeliveryRegion = {
+  id: string;
+  name: string;
+  fee: number;
+};
+
+export type CmsTimeSlot = {
+  id: string;
+  label: string;
+  start: string;
+  end: string;
+  enabled: boolean;
+};
+
+export type CmsPaymentMethod = {
+  id: string;
+  label: string;
+  enabled: boolean;
+  order: number;
+};
+
+export type CmsCheckoutTexts = {
+  cartTitle: string;
+  cartEmpty: string;
+  cartContinue: string;
+  cartSubtotal: string;
+  cartDiscount: string;
+  cartDeliveryFee: string;
+  cartTotal: string;
+  couponQuestion: string;
+  couponPlaceholder: string;
+  couponApply: string;
+  couponApplied: string;
+  couponInvalid: string;
+  couponExpired: string;
+  couponExhausted: string;
+  couponAlreadyUsed: string;
+  couponMinOrder: string;
+  checkoutStart: string;
+  stepFulfillment: string;
+  stepDelivery: string;
+  stepPickup: string;
+  stepDeliveryAddress: string;
+  stepPickupInfo: string;
+  stepDate: string;
+  stepTime: string;
+  stepPayment: string;
+  stepCustomer: string;
+  stepReview: string;
+  fieldName: string;
+  fieldPhone: string;
+  fieldCep: string;
+  fieldAddress: string;
+  fieldNumber: string;
+  fieldComplement: string;
+  fieldDistrict: string;
+  fieldReference: string;
+  fieldNotes: string;
+  fieldObservations: string;
+  changeQuestion: string;
+  changeNo: string;
+  changeYes: string;
+  changeFor: string;
+  btnBack: string;
+  btnNext: string;
+  btnSendWhatsapp: string;
+  btnAddToCart: string;
+  prepLabel: string;
+  qtyLabel: string;
+  searchPlaceholder: string;
+  unavailable: string;
+  featured: string;
+  minQtyHint: string;
+  maxQtyHint: string;
+  ordersDisabled: string;
+  dateUnavailable: string;
+  timeUnavailable: string;
+  phoneInvalid: string;
+  requiredField: string;
+  reviewProducts: string;
+  reviewFulfillment: string;
+  reviewDate: string;
+  reviewTime: string;
+  reviewPayment: string;
+  reviewCustomer: string;
+  reviewTotals: string;
+};
+
+export type CmsOrderSettings = {
+  enabled: boolean;
+  allowDelivery: boolean;
+  allowPickup: boolean;
+  delivery: {
+    enabled: boolean;
+    feeMode: DeliveryFeeMode;
+    fixedFee: number;
+    instructions: string;
+    regions: CmsDeliveryRegion[];
+  };
+  pickup: {
+    enabled: boolean;
+    address: string;
+    hours: string;
+    instructions: string;
+    notes: string;
+  };
+  schedule: {
+    minLeadDays: number;
+    allowSameDay: boolean;
+    availableWeekdays: number[];
+    blockedDates: string[];
+    timeSlots: CmsTimeSlot[];
+    blockedTimeSlotIds: string[];
+  };
+  paymentMethods: CmsPaymentMethod[];
+  checkoutTexts: CmsCheckoutTexts;
+};
+
 export type CmsPageSection =
   | "hero"
   | "about"
@@ -90,9 +275,7 @@ export type CmsContent = {
   logoUrl: string;
   hero: {
     image: string;
-    /** Opacidade da imagem de fundo (0-100). */
     imageOpacity: number;
-    /** Intensidade do escurecimento por cima da imagem (0-100). */
     overlayOpacity: number;
     titleLine1: string;
     titleLine2: string;
@@ -168,8 +351,8 @@ export type CmsSettings = {
   ogTitle: string;
   ogDescription: string;
   sections: CmsSectionsVisibility;
-  /** Ordem das secoes no site (exceto botao flutuante). */
   sectionOrder: CmsPageSection[];
+  orderSettings: CmsOrderSettings;
 };
 
 export type CmsData = {
@@ -184,6 +367,8 @@ export type CmsData = {
   testimonials: CmsTestimonial[];
   steps: CmsStep[];
   features: CmsFeature[];
+  coupons: CmsCoupon[];
+  menuLinks: CmsMenuLink[];
 };
 
 export type CmsCollection =
@@ -193,4 +378,20 @@ export type CmsCollection =
   | "faq"
   | "testimonials"
   | "steps"
-  | "features";
+  | "features"
+  | "coupons"
+  | "menuLinks";
+
+export type CouponValidationResult =
+  | {
+      valid: true;
+      couponId: string;
+      code: string;
+      discountAmount: number;
+      message: string;
+    }
+  | {
+      valid: false;
+      reason: "invalid" | "expired" | "exhausted" | "min_order" | "inactive" | "customer_limit";
+      message: string;
+    };
