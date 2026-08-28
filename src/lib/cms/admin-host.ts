@@ -7,11 +7,24 @@ export function getConfiguredAdminHost(): string {
 }
 
 export function getDevAdminHosts(): string[] {
-  const raw = process.env.CMS_ADMIN_DEV_HOSTS || "localhost,127.0.0.1";
+  const raw = process.env.CMS_ADMIN_DEV_HOSTS || "localhost,127.0.0.1,::1";
   return raw
     .split(",")
     .map((host) => host.trim().toLowerCase())
     .filter(Boolean);
+}
+
+export function isDevHostname(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase();
+  return getDevAdminHosts().includes(normalized);
+}
+
+/** Localhost no admin: true em dev por padrao; use CMS_ADMIN_ALLOW_LOCALHOST=true para forcar. */
+export function isLocalhostAdminEnabled(): boolean {
+  const flag = process.env.CMS_ADMIN_ALLOW_LOCALHOST?.trim().toLowerCase();
+  if (flag === "false") return false;
+  if (flag === "true") return true;
+  return process.env.NODE_ENV !== "production";
 }
 
 export function normalizeHostname(hostHeader: string): string {
@@ -31,9 +44,7 @@ export function isAdminHost(hostname: string): boolean {
 
   if (normalized === getConfiguredAdminHost()) return true;
 
-  if (process.env.NODE_ENV !== "production") {
-    return getDevAdminHosts().includes(normalized);
-  }
+  if (isDevHostname(normalized) && isLocalhostAdminEnabled()) return true;
 
   return false;
 }
@@ -74,5 +85,12 @@ export function assertAdminHost(): void {
 
 export function isAdminHostClient(): boolean {
   if (typeof window === "undefined") return true;
-  return isAdminHost(window.location.hostname);
+
+  const hostname = window.location.hostname.toLowerCase();
+  if (hostname === getConfiguredAdminHost()) return true;
+
+  // Vite dev: sempre libera localhost para acompanhar mudancas localmente
+  if (import.meta.env.DEV && isDevHostname(hostname)) return true;
+
+  return isAdminHost(hostname);
 }
