@@ -11,6 +11,7 @@ import {
   sleep,
   verifyPassword,
 } from "./auth";
+import { assertAdminHost } from "./admin-host";
 import { createSeedCms } from "./seed";
 import { withNormalizedSettings } from "./sections";
 import { newId, readCms, updateCms, writeCms } from "./store";
@@ -87,6 +88,7 @@ export const getPublicCms = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const getAdminCms = createServerFn({ method: "GET" }).handler(async () => {
+  assertAdminHost();
   requireAuth();
   const data = await readCms();
   return {
@@ -102,6 +104,7 @@ export const getAdminCms = createServerFn({ method: "GET" }).handler(async () =>
 });
 
 export const getAuthStatus = createServerFn({ method: "GET" }).handler(async () => {
+  assertAdminHost();
   return { authenticated: isAuthenticated() };
 });
 
@@ -113,6 +116,7 @@ export const loginAdmin = createServerFn({ method: "POST" })
     return { password: data.password };
   })
   .handler(async ({ data }) => {
+    assertAdminHost();
     assertLoginAllowed();
     await sleep(350);
     if (!verifyPassword(data.password)) {
@@ -125,6 +129,7 @@ export const loginAdmin = createServerFn({ method: "POST" })
   });
 
 export const logoutAdmin = createServerFn({ method: "POST" }).handler(async () => {
+  assertAdminHost();
   clearSession();
   return { ok: true as const };
 });

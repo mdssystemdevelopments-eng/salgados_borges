@@ -1,6 +1,8 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { deleteCookie, getCookie, setCookie, getRequestIP } from "@tanstack/react-start/server";
 
+import { assertAdminHost } from "./admin-host";
+
 const COOKIE_NAME = "sb_cms_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 8; // 8 hours
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
@@ -126,6 +128,7 @@ export function isAuthenticated(): boolean {
 }
 
 export function requireAuth(): void {
+  assertAdminHost();
   if (!isAuthenticated()) {
     throw new Error("UNAUTHORIZED");
   }

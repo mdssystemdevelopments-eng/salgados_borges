@@ -1,6 +1,14 @@
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
+import { renderAdminAccessDeniedPage } from "./lib/admin-access-page";
+import {
+  isAdminHost,
+  isAdminPath,
+  isAllowedOnAdminHost,
+  parseRequestHostname,
+} from "./lib/cms/admin-host";
+import { runWithRequestContext } from "./lib/cms/request-context";
 import { renderErrorPage } from "./lib/error-page";
 
 type ServerEntry = {
@@ -44,18 +52,62 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+function adminAccessDeniedResponse(): Response {
+  return new Response(renderAdminAccessDeniedPage(), {
+    status: 404,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
+}
+
+function isServerFnRequest(request: Request): boolean {
+  if (request.headers.get("x-tsr-serverFn") === "true") return true;
+  const base = process.env.TSS_SERVER_FN_BASE;
+  if (!base) return false;
+  const pathname = new URL(request.url).pathname;
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
+function enforceAdminHostRouting(request: Request, hostname: string): Response | null {
+  const { pathname } = new URL(request.url);
+  const onAdminHost = isAdminHost(hostname);
+
+  if (isAdminPath(pathname) && !onAdminHost) {
+    return adminAccessDeniedResponse();
+  }
+
+  if (onAdminHost) {
+    if (pathname === "/") {
+      return Response.redirect(new URL("/admin/login", request.url), 302);
+    }
+    if (!isAllowedOnAdminHost(pathname) && !isServerFnRequest(request)) {
+      return adminAccessDeniedResponse();
+    }
+  }
+
+  return null;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
-    try {
-      const handler = await getServerEntry();
-      const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
-    } catch (error) {
-      console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
-    }
+    const hostname = parseRequestHostname(request);
+    const blocked = enforceAdminHostRouting(request, hostname);
+    if (blocked) return blocked;
+
+    return runWithRequestContext(hostname, async () => {
+      try {
+        const handler = await getServerEntry();
+        const response = await handler.fetch(request, env, ctx);
+        return await normalizeCatastrophicSsrResponse(response);
+      } catch (error) {
+        console.error(error);
+        return new Response(renderErrorPage(), {
+          status: 500,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        });
+      }
+    });
   },
 };

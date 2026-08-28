@@ -22,5 +22,7 @@ services:
         sync: false
       - key: CMS_ADMIN_PASSWORD
         sync: false
+      - key: CMS_ADMIN_HOST
+        value: admincms.salgadosborges.com.br
       - key: CMS_SESSION_SECRET
         generateValue: true

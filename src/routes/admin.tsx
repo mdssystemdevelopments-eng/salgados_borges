@@ -1,10 +1,15 @@
-import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState, notFound } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 
 import { getAuthStatus } from "@/lib/cms/api";
+import { isAdminHostClient } from "@/lib/cms/admin-host";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
+    if (!isAdminHostClient()) {
+      throw notFound();
+    }
+
     const isLogin = location.pathname === "/admin/login";
     const { authenticated } = await getAuthStatus();
     if (!authenticated && !isLogin) {
