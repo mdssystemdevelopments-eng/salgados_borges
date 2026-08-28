@@ -1,6 +1,7 @@
 import type {
   CmsCheckoutTexts,
   CmsCoupon,
+  CmsOrderAdvanceSettings,
   CmsOrderSettings,
   CmsPaymentMethod,
   PrepMethod,
@@ -109,6 +110,25 @@ export function createDefaultPaymentMethods(): CmsPaymentMethod[] {
   ];
 }
 
+export function createDefaultOrderAdvanceSettings(): CmsOrderAdvanceSettings {
+  return {
+    enabled: true,
+    minimumAdvanceHours: 48,
+    timeZone: "America/Sao_Paulo",
+    warningTitle: "Atenção!",
+    warningMessage:
+      "Pedidos que não são de pronta entrega precisam ser realizados com no mínimo 48 horas de antecedência, pois precisamos de tempo para preparar sua encomenda.",
+    warningDescription: "A data escolhida está dentro do período mínimo de antecedência.",
+    whatsappEnabled: true,
+    whatsappButtonText: "Falar pelo WhatsApp",
+    whatsappMessage:
+      "Olá! Gostaria de verificar a possibilidade de realizar um pedido para uma data que está dentro do prazo mínimo de antecedência.",
+    whatsappNumber: "",
+    changeOrderEnabled: true,
+    changeOrderButtonText: "Alterar pedido",
+  };
+}
+
 export function createDefaultOrderSettings(): CmsOrderSettings {
   return {
     enabled: true,
@@ -145,6 +165,7 @@ export function createDefaultOrderSettings(): CmsOrderSettings {
     },
     paymentMethods: createDefaultPaymentMethods(),
     checkoutTexts: createDefaultCheckoutTexts(),
+    orderAdvance: createDefaultOrderAdvanceSettings(),
   };
 }
 

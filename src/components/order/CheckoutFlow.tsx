@@ -4,6 +4,12 @@ import { redeemCoupon, validateCoupon } from "@/lib/cms/coupon-api";
 import { PREP_METHOD_LABELS } from "@/lib/cms/order-defaults";
 import { getEffectiveProductPrice } from "@/lib/cms/migrate";
 import type { CmsData } from "@/lib/cms/types";
+import {
+  toAdvanceCartLines,
+  validateOrderAdvanceLogic,
+  type OrderAdvanceModalContent,
+} from "@/lib/order/advance";
+import { validateOrderAdvance } from "@/lib/order/order-api";
 import { orderTotals } from "@/lib/order/pricing";
 import { availableTimeSlots, isDateAvailable, minSelectableDate } from "@/lib/order/schedule";
 import {
@@ -21,6 +27,7 @@ import {
   type CheckoutDraft,
 } from "@/lib/order/types";
 import { CartLinePreview, formatBRL } from "./ProductAddSheet";
+import { OrderAdvanceModal } from "./OrderAdvanceModal";
 
 type StepId = "cart" | "fulfillment" | "schedule" | "payment" | "customer" | "review";
 
@@ -86,6 +93,41 @@ export function CheckoutFlow({
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [advanceModal, setAdvanceModal] = useState<OrderAdvanceModalContent | null>(null);
+
+  const advanceInput = useMemo(
+    () => ({
+      cartLines: toAdvanceCartLines(items),
+      date: draft.date,
+      timeSlotId: draft.timeSlotId,
+    }),
+    [items, draft.date, draft.timeSlotId],
+  );
+
+  const checkAdvanceClient = (): boolean => {
+    const result = validateOrderAdvanceLogic(os, cms.products, advanceInput, {
+      nowMs: Date.now(),
+      fallbackWhatsapp: cms.settings.whatsapp,
+    });
+    if (!result.valid) {
+      setAdvanceModal(result.modal);
+      return false;
+    }
+    return true;
+  };
+
+  const checkAdvanceServer = async (): Promise<boolean> => {
+    try {
+      const result = await validateOrderAdvance({ data: advanceInput });
+      if (!result.valid) {
+        setAdvanceModal(result.modal);
+        return false;
+      }
+      return true;
+    } catch {
+      return checkAdvanceClient();
+    }
+  };
 
   const resetCheckout = () => {
     setStep("cart");
@@ -94,6 +136,7 @@ export function CheckoutFlow({
     setCouponError("");
     setCouponLoading(false);
     setSubmitting(false);
+    setAdvanceModal(null);
   };
 
   const checkoutPhone = resolveCheckoutPhone(draft);
@@ -193,6 +236,9 @@ export function CheckoutFlow({
     setSubmitting(true);
     setCouponError("");
     try {
+      const advanceOk = await checkAdvanceServer();
+      if (!advanceOk) return;
+
       if (draft.coupon) {
         const preCheck = await validateCoupon({
           data: buildCouponRequest(draft.coupon.code, items, totals.subtotal, phone),
@@ -236,6 +282,18 @@ export function CheckoutFlow({
 
   return (
     <>
+      {advanceModal ? (
+        <OrderAdvanceModal
+          open
+          content={advanceModal}
+          onChangeOrder={() => {
+            setAdvanceModal(null);
+            setStep("schedule");
+          }}
+          onClose={() => setAdvanceModal(null)}
+        />
+      ) : null}
+
       <div className="fixed inset-0 z-[70] bg-black/40" onClick={onClose} aria-hidden />
       <aside className="fixed top-0 right-0 z-[71] flex h-full w-full max-w-lg flex-col bg-card border-l border-border shadow-2xl">
         <header className="flex items-center justify-between border-b border-border px-4 py-4">
@@ -665,7 +723,10 @@ export function CheckoutFlow({
             <button
               type="button"
               disabled={!canProceedSchedule}
-              onClick={goNext}
+              onClick={() => {
+                if (!checkAdvanceClient()) return;
+                goNext();
+              }}
               className="w-full rounded-full bg-gold-gradient py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground disabled:opacity-50"
             >
               {texts.btnNext}

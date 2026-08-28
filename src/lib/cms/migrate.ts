@@ -1,5 +1,6 @@
 import {
   createDefaultCheckoutTexts,
+  createDefaultOrderAdvanceSettings,
   createDefaultOrderSettings,
   createDefaultPaymentMethods,
   createSampleCoupons,
@@ -9,6 +10,7 @@ import type {
   CmsCheckoutTexts,
   CmsCoupon,
   CmsData,
+  CmsOrderAdvanceSettings,
   CmsOrderSettings,
   CmsPaymentMethod,
   CmsProduct,
@@ -87,6 +89,33 @@ function mergePaymentMethods(methods?: CmsPaymentMethod[]): CmsPaymentMethod[] {
   return defaults.map((d) => ({ ...d, ...map.get(d.id) }));
 }
 
+function normalizeOrderAdvance(partial?: Partial<CmsOrderAdvanceSettings>): CmsOrderAdvanceSettings {
+  const base = createDefaultOrderAdvanceSettings();
+  if (!partial) return base;
+  const hours = Number(partial.minimumAdvanceHours);
+  return {
+    ...base,
+    ...partial,
+    enabled: partial.enabled ?? base.enabled,
+    minimumAdvanceHours: Number.isFinite(hours)
+      ? Math.max(1, Math.min(720, Math.round(hours)))
+      : base.minimumAdvanceHours,
+    timeZone:
+      typeof partial.timeZone === "string" && partial.timeZone.trim()
+        ? partial.timeZone.trim()
+        : base.timeZone,
+    warningTitle: partial.warningTitle ?? base.warningTitle,
+    warningMessage: partial.warningMessage ?? base.warningMessage,
+    warningDescription: partial.warningDescription ?? base.warningDescription,
+    whatsappEnabled: partial.whatsappEnabled ?? base.whatsappEnabled,
+    whatsappButtonText: partial.whatsappButtonText ?? base.whatsappButtonText,
+    whatsappMessage: partial.whatsappMessage ?? base.whatsappMessage,
+    whatsappNumber: partial.whatsappNumber ?? base.whatsappNumber,
+    changeOrderEnabled: partial.changeOrderEnabled ?? base.changeOrderEnabled,
+    changeOrderButtonText: partial.changeOrderButtonText ?? base.changeOrderButtonText,
+  };
+}
+
 export function normalizeOrderSettings(partial?: Partial<CmsOrderSettings>): CmsOrderSettings {
   const base = createDefaultOrderSettings();
   if (!partial) return base;
@@ -110,6 +139,7 @@ export function normalizeOrderSettings(partial?: Partial<CmsOrderSettings>): Cms
     },
     paymentMethods: mergePaymentMethods(partial.paymentMethods),
     checkoutTexts: mergeCheckoutTexts(partial.checkoutTexts),
+    orderAdvance: normalizeOrderAdvance(partial.orderAdvance),
   };
 }
 

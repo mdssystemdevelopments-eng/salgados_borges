@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { OrderAdvanceModal } from "@/components/order/OrderAdvanceModal";
 import {
   deleteCollectionItem,
   saveOrderSettings,
@@ -21,6 +22,7 @@ import type {
   PrepMethod,
   ProductFulfillmentTag,
 } from "@/lib/cms/types";
+import { buildAdvanceModalContent, formatDateBr } from "@/lib/order/advance";
 import {
   AdminButton,
   AdminField,
@@ -345,7 +347,7 @@ function CouponEditor({
   );
 }
 
-type OrderTab = "geral" | "entrega" | "agenda";
+type OrderTab = "geral" | "entrega" | "agenda" | "antecedencia";
 
 export function OrderSettingsSection({
   cms,
@@ -358,6 +360,7 @@ export function OrderSettingsSection({
 }) {
   const [form, setForm] = useState(cms.settings.orderSettings);
   const [tab, setTab] = useState<OrderTab>("geral");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     setForm(cms.settings.orderSettings);
@@ -366,16 +369,30 @@ export function OrderSettingsSection({
   const patch = (partial: Partial<CmsOrderSettings>) =>
     setForm((prev) => ({ ...prev, ...partial }));
 
+  const patchAdvance = (partial: Partial<CmsOrderSettings["orderAdvance"]>) =>
+    setForm((prev) => ({ ...prev, orderAdvance: { ...prev.orderAdvance, ...partial } }));
+
   const save = () =>
     run(
       async () => saveOrderSettings({ data: { orderSettings: form } }),
-      "Configurações de pedidos salvas",
+      "Configurações salvas com sucesso!",
     );
+
+  const previewModal = buildAdvanceModalContent(
+    form.orderAdvance,
+    cms.settings.whatsapp,
+    {
+      minimumHours: form.orderAdvance.minimumAdvanceHours,
+      selectedDate: formatDateBr(new Date().toISOString().slice(0, 10)),
+      selectedTime: form.schedule.timeSlots.find((s) => s.enabled)?.label ?? "08:00",
+    },
+  );
 
   const tabs: { id: OrderTab; label: string }[] = [
     { id: "geral", label: "Geral e pagamento" },
     { id: "entrega", label: "Entrega e retirada" },
     { id: "agenda", label: "Datas e horários" },
+    { id: "antecedencia", label: "Antecedência de pedidos" },
   ];
 
   return (
@@ -591,11 +608,134 @@ export function OrderSettingsSection({
         </div>
       ) : null}
 
+      {tab === "antecedencia" ? (
+        <div className="grid gap-6 max-w-2xl">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.orderAdvance.enabled}
+              onChange={(e) => patchAdvance({ enabled: e.target.checked })}
+            />
+            Exigir antecedência mínima para encomendas
+          </label>
+
+          <AdminField label="Antecedência mínima (horas)">
+            <AdminInput
+              type="number"
+              min={1}
+              max={720}
+              value={form.orderAdvance.minimumAdvanceHours}
+              onChange={(e) =>
+                patchAdvance({ minimumAdvanceHours: Number(e.target.value) || 48 })
+              }
+            />
+          </AdminField>
+
+          <AdminField label="Fuso horário da loja">
+            <AdminInput
+              value={form.orderAdvance.timeZone}
+              onChange={(e) => patchAdvance({ timeZone: e.target.value })}
+              placeholder="America/Sao_Paulo"
+            />
+          </AdminField>
+
+          <div className="border-t border-border pt-4 space-y-4">
+            <div className="text-sm font-medium text-foreground">Mensagem de bloqueio</div>
+            <AdminField label="Título">
+              <AdminInput
+                value={form.orderAdvance.warningTitle}
+                onChange={(e) => patchAdvance({ warningTitle: e.target.value })}
+              />
+            </AdminField>
+            <AdminField label="Mensagem">
+              <AdminTextarea
+                rows={4}
+                value={form.orderAdvance.warningMessage}
+                onChange={(e) => patchAdvance({ warningMessage: e.target.value })}
+              />
+            </AdminField>
+            <AdminField label="Mensagem complementar">
+              <AdminTextarea
+                rows={3}
+                value={form.orderAdvance.warningDescription}
+                onChange={(e) => patchAdvance({ warningDescription: e.target.value })}
+              />
+            </AdminField>
+            <p className="text-xs text-muted-foreground">
+              Placeholders: {"{{minimumHours}}"}, {"{{selectedDate}}"}, {"{{selectedTime}}"}
+            </p>
+          </div>
+
+          <div className="border-t border-border pt-4 space-y-4">
+            <div className="text-sm font-medium text-foreground">Botão WhatsApp</div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.orderAdvance.whatsappEnabled}
+                onChange={(e) => patchAdvance({ whatsappEnabled: e.target.checked })}
+              />
+              Exibir botão WhatsApp
+            </label>
+            <AdminField label="Texto do botão">
+              <AdminInput
+                value={form.orderAdvance.whatsappButtonText}
+                onChange={(e) => patchAdvance({ whatsappButtonText: e.target.value })}
+              />
+            </AdminField>
+            <AdminField label="Número do WhatsApp (vazio = usa o principal do site)">
+              <AdminInput
+                value={form.orderAdvance.whatsappNumber}
+                onChange={(e) => patchAdvance({ whatsappNumber: e.target.value })}
+                placeholder={cms.settings.whatsapp}
+              />
+            </AdminField>
+            <AdminField label="Mensagem automática">
+              <AdminTextarea
+                rows={3}
+                value={form.orderAdvance.whatsappMessage}
+                onChange={(e) => patchAdvance({ whatsappMessage: e.target.value })}
+              />
+            </AdminField>
+          </div>
+
+          <div className="border-t border-border pt-4 space-y-4">
+            <div className="text-sm font-medium text-foreground">Botão alterar pedido</div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.orderAdvance.changeOrderEnabled}
+                onChange={(e) => patchAdvance({ changeOrderEnabled: e.target.checked })}
+              />
+              Exibir botão &quot;Fazer outro pedido&quot;
+            </label>
+            <AdminField label="Texto">
+              <AdminInput
+                value={form.orderAdvance.changeOrderButtonText}
+                onChange={(e) => patchAdvance({ changeOrderButtonText: e.target.value })}
+              />
+            </AdminField>
+          </div>
+
+          <AdminButton type="button" variant="ghost" onClick={() => setPreviewOpen(true)}>
+            Pré-visualizar mensagem
+          </AdminButton>
+        </div>
+      ) : null}
+
       <div className="pt-4 border-t border-border">
         <AdminButton type="button" disabled={busy} onClick={() => void save()}>
           Salvar configurações
         </AdminButton>
       </div>
+
+      {previewOpen ? (
+        <OrderAdvanceModal
+          open
+          content={previewModal}
+          onChangeOrder={() => setPreviewOpen(false)}
+          onClose={() => setPreviewOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

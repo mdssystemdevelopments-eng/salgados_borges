@@ -215,6 +215,24 @@ export type CmsCheckoutTexts = {
   reviewTotals: string;
 };
 
+export type CmsOrderAdvanceSettings = {
+  /** Exigir antecedência mínima para pedidos que não sejam pronta entrega. */
+  enabled: boolean;
+  minimumAdvanceHours: number;
+  /** Fuso horário da loja (IANA). */
+  timeZone: string;
+  warningTitle: string;
+  warningMessage: string;
+  warningDescription: string;
+  whatsappEnabled: boolean;
+  whatsappButtonText: string;
+  whatsappMessage: string;
+  /** Vazio = usa o WhatsApp principal do site. */
+  whatsappNumber: string;
+  changeOrderEnabled: boolean;
+  changeOrderButtonText: string;
+};
+
 export type CmsOrderSettings = {
   enabled: boolean;
   allowDelivery: boolean;
@@ -243,6 +261,7 @@ export type CmsOrderSettings = {
   };
   paymentMethods: CmsPaymentMethod[];
   checkoutTexts: CmsCheckoutTexts;
+  orderAdvance: CmsOrderAdvanceSettings;
 };
 
 export type CmsPageSection =
