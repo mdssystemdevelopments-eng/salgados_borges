@@ -3,10 +3,12 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderAdminAccessDeniedPage } from "./lib/admin-access-page";
 import {
+  getPublicSiteOrigin,
   isAdminHost,
   isAdminPath,
   isAllowedOnAdminHost,
   isDedicatedAdminSubdomain,
+  isPublicMenuPath,
   parseRequestHostname,
 } from "./lib/cms/admin-host";
 import { runWithRequestContext } from "./lib/cms/request-context";
@@ -76,6 +78,14 @@ function enforceAdminHostRouting(request: Request, hostname: string): Response |
 
   if (isAdminPath(pathname) && !isAdminHost(hostname)) {
     return adminAccessDeniedResponse();
+  }
+
+  // Cardapio compartilhavel so no dominio publico
+  if (isDedicatedAdminSubdomain(hostname) && isPublicMenuPath(pathname)) {
+    const { search } = new URL(request.url);
+    const proto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
+    const target = new URL(`${pathname}${search}`, getPublicSiteOrigin({ protocol: proto }));
+    return Response.redirect(target, 302);
   }
 
   // Subdominio exclusivo (admincms.*): so CMS — localhost serve site + admin

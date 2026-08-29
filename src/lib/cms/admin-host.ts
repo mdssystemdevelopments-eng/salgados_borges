@@ -1,7 +1,65 @@
 const DEFAULT_ADMIN_HOST = "admincms.salgadosborges.com.br";
+const DEFAULT_PUBLIC_SITE_HOST = "salgadosborges.com.br";
 
 export function getConfiguredAdminHost(): string {
   return (process.env.CMS_ADMIN_HOST || DEFAULT_ADMIN_HOST).trim().toLowerCase();
+}
+
+/** Host publico do site (sem admincms). */
+export function getConfiguredPublicSiteHost(): string {
+  const fromUrl = process.env.PUBLIC_SITE_URL?.trim();
+  if (fromUrl) {
+    try {
+      return new URL(fromUrl).hostname.toLowerCase();
+    } catch {
+      return fromUrl
+        .replace(/^https?:\/\//i, "")
+        .split("/")[0]
+        .toLowerCase();
+    }
+  }
+
+  const adminHost = getConfiguredAdminHost();
+  if (adminHost.startsWith("admincms.")) {
+    return adminHost.slice("admincms.".length);
+  }
+
+  return DEFAULT_PUBLIC_SITE_HOST;
+}
+
+/** Origem publica para links de cardapio compartilhavel (https://salgadosborges.com.br). */
+export function getPublicSiteOrigin(options?: { protocol?: string }): string {
+  const fromUrl = process.env.PUBLIC_SITE_URL?.trim();
+  if (fromUrl) {
+    return fromUrl.replace(/\/$/, "");
+  }
+
+  const protocol = options?.protocol?.replace(/:$/, "") || "https";
+  return `${protocol}://${getConfiguredPublicSiteHost()}`;
+}
+
+export function buildPublicMenuLink(slug: string, origin?: string): string {
+  const base = (origin ?? getPublicSiteOrigin()).replace(/\/$/, "");
+  const clean = slug.trim().toLowerCase().replace(/^\/+|\/+$/g, "");
+  return `${base}/c/${clean}`;
+}
+
+/** No browser: usa o site publico quando o CMS roda em admincms.* */
+export function resolvePublicMenuLinkOrigin(): string {
+  if (typeof window === "undefined") {
+    return getPublicSiteOrigin();
+  }
+
+  const hostname = window.location.hostname.toLowerCase();
+  if (isDedicatedAdminSubdomain(hostname)) {
+    return getPublicSiteOrigin({ protocol: window.location.protocol.replace(/:$/, "") });
+  }
+
+  return window.location.origin;
+}
+
+export function isPublicMenuPath(pathname: string): boolean {
+  return pathname === "/c" || pathname.startsWith("/c/");
 }
 
 export function getDevAdminHosts(): string[] {

@@ -6,6 +6,7 @@ import {
   upsertCollectionItem,
 } from "@/lib/cms/api";
 import type { CmsData, CmsMenuLink } from "@/lib/cms/types";
+import { buildPublicMenuLink, isDedicatedAdminSubdomain, resolvePublicMenuLinkOrigin } from "@/lib/cms/admin-host";
 import { AdminButton, AdminField, AdminInput, VisibilityBadge } from "./ui";
 
 type RunFn = (task: () => Promise<CmsData>, okMessage: string) => Promise<void>;
@@ -33,7 +34,7 @@ export function MenuLinksSection({ cms, busy, run }: { cms: CmsData; busy: boole
     createdAt: new Date().toISOString(),
   };
   const [editing, setEditing] = useState<CmsMenuLink | null>(null);
-  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:8080";
+  const publicOrigin = resolvePublicMenuLinkOrigin();
 
   return (
     <div className="space-y-4">
@@ -75,7 +76,7 @@ export function MenuLinksSection({ cms, busy, run }: { cms: CmsData; busy: boole
                   <div className="text-xs text-muted-foreground">{link.subtitle}</div>
                 </td>
                 <td className="px-4 py-3">
-                  <code className="text-xs">{origin}/c/{link.slug}</code>
+                  <code className="text-xs">{buildPublicMenuLink(link.slug, publicOrigin)}</code>
                 </td>
                 <td className="px-4 py-3">
                   <VisibilityBadge visible={link.active} />
@@ -89,7 +90,7 @@ export function MenuLinksSection({ cms, busy, run }: { cms: CmsData; busy: boole
                       type="button"
                       variant="ghost"
                       onClick={() => {
-                        void navigator.clipboard.writeText(`${origin}/c/${link.slug}`);
+                        void navigator.clipboard.writeText(buildPublicMenuLink(link.slug, publicOrigin));
                       }}
                     >
                       Copiar
@@ -145,7 +146,7 @@ export function MenuLinksSection({ cms, busy, run }: { cms: CmsData; busy: boole
           link={editing}
           cms={cms}
           busy={busy}
-          origin={origin}
+          publicOrigin={publicOrigin}
           onClose={() => setEditing(null)}
           onSave={(item) =>
             run(async () => {
@@ -166,14 +167,14 @@ function MenuLinkEditor({
   link,
   cms,
   busy,
-  origin,
+  publicOrigin,
   onClose,
   onSave,
 }: {
   link: CmsMenuLink;
   cms: CmsData;
   busy: boolean;
-  origin: string;
+  publicOrigin: string;
   onClose: () => void;
   onSave: (link: CmsMenuLink) => void;
 }) {
@@ -181,7 +182,11 @@ function MenuLinkEditor({
   useEffect(() => setForm(link), [link]);
 
   const previewSlug = slugify(form.slug || form.title) || "cardapio";
-  const previewUrl = `${origin}/c/${previewSlug}`;
+  const previewUrl = buildPublicMenuLink(previewSlug, publicOrigin);
+  const previewFrameSrc =
+    typeof window !== "undefined" && isDedicatedAdminSubdomain(window.location.hostname)
+      ? previewUrl
+      : `/c/${previewSlug}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 lg:items-stretch lg:justify-stretch lg:p-0">
@@ -271,7 +276,7 @@ function MenuLinkEditor({
           <div className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
             Prévia ao vivo — laboratório
           </div>
-          <iframe title="Prévia do cardápio" src={`/c/${previewSlug}`} className="flex-1 w-full bg-background" />
+          <iframe title="Prévia do cardápio" src={previewFrameSrc} className="flex-1 w-full bg-background" />
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { getAdminCms } from "@/lib/cms/api";
+import { buildPublicMenuLink, isDedicatedAdminSubdomain, resolvePublicMenuLinkOrigin } from "@/lib/cms/admin-host";
 
 export const Route = createFileRoute("/admin/cardapio-lab")({
   loader: () => getAdminCms(),
@@ -15,7 +16,16 @@ function CardapioLabPage() {
     [cms.menuLinks],
   );
 
-  const previewUrl = activeLink ? `/c/${activeLink.slug}` : null;
+  const publicOrigin = resolvePublicMenuLinkOrigin();
+  const previewPath = activeLink ? `/c/${activeLink.slug}` : null;
+  const previewPublicUrl = activeLink ? buildPublicMenuLink(activeLink.slug, publicOrigin) : null;
+  const previewFrameSrc =
+    typeof window !== "undefined" &&
+    window.location.hostname &&
+    isDedicatedAdminSubdomain(window.location.hostname) &&
+    previewPublicUrl
+      ? previewPublicUrl
+      : previewPath;
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 lg:p-8 space-y-6">
@@ -46,14 +56,11 @@ function CardapioLabPage() {
               <div className="font-display text-xl mt-1">{activeLink.title}</div>
               <p className="text-sm text-muted-foreground mt-1">{activeLink.subtitle}</p>
             </div>
-            {previewUrl ? (
+            {previewPublicUrl ? (
               <>
-                <div className="rounded-lg bg-muted px-3 py-2 text-sm break-all">
-                  {typeof window !== "undefined" ? window.location.origin : "http://localhost:8080"}
-                  {previewUrl}
-                </div>
+                <div className="rounded-lg bg-muted px-3 py-2 text-sm break-all">{previewPublicUrl}</div>
                 <a
-                  href={previewUrl}
+                  href={previewPublicUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex w-full items-center justify-center rounded-full bg-gold-gradient px-4 py-2.5 text-sm font-semibold text-primary-foreground"
@@ -64,9 +71,9 @@ function CardapioLabPage() {
             ) : null}
           </aside>
 
-          {previewUrl ? (
+          {previewFrameSrc ? (
             <div className="rounded-xl border border-border overflow-hidden min-h-[70vh] bg-muted">
-              <iframe title="Prévia do cardápio" src={previewUrl} className="h-[80vh] w-full bg-background" />
+              <iframe title="Prévia do cardápio" src={previewFrameSrc} className="h-[80vh] w-full bg-background" />
             </div>
           ) : null}
         </div>
