@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { CheckoutFlow } from "@/components/order/CheckoutFlow";
-import { hasSeenMenuCover, MenuCoverSplash } from "@/components/menu/MenuCoverSplash";
 import { ProductAddSheet } from "@/components/order/ProductAddSheet";
 import { getEffectiveProductPrice } from "@/lib/cms/migrate";
 import { PRODUCT_FULFILLMENT_LABELS } from "@/lib/cms/order-defaults";
@@ -48,13 +47,6 @@ export function SharedMenuPage({ cms, menuLink }: SharedMenuPageProps) {
   const [category, setCategory] = useState("Todos");
   const [search, setSearch] = useState("");
   const [pickProduct, setPickProduct] = useState<CmsProduct | null>(null);
-  const [showCover, setShowCover] = useState(false);
-
-  useEffect(() => {
-    if (!hasSeenMenuCover(menuLink.slug)) {
-      setShowCover(true);
-    }
-  }, [menuLink.slug]);
 
   const filtered = useMemo(() => {
     let list =
@@ -90,9 +82,6 @@ export function SharedMenuPage({ cms, menuLink }: SharedMenuPageProps) {
 
   return (
     <div className="shared-menu-page text-foreground overflow-x-hidden">
-      {showCover ? (
-        <MenuCoverSplash slug={menuLink.slug} onComplete={() => setShowCover(false)} />
-      ) : null}
       <div className="shared-menu-wallpaper" aria-hidden="true">
         <img
           src={heroImage}
