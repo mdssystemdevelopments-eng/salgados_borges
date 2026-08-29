@@ -56,22 +56,44 @@ type SectionId =
   | "settings"
   | "visibility";
 
-const NAV: { id: SectionId; label: string }[] = [
-  { id: "dashboard", label: "Visão geral" },
-  { id: "products", label: "Produtos" },
-  { id: "categories", label: "Categorias" },
-  { id: "coupons", label: "Cupons" },
-  { id: "menuLinks", label: "Gerar link" },
-  { id: "orders", label: "Finalização" },
-  { id: "gallery", label: "Galeria" },
-  { id: "faq", label: "FAQ" },
-  { id: "testimonials", label: "Depoimentos" },
-  { id: "steps", label: "Como funciona" },
-  { id: "features", label: "Diferenciais" },
-  { id: "content", label: "Textos & Hero" },
-  { id: "settings", label: "Contato & SEO" },
-  { id: "visibility", label: "Ordem & Visibilidade" },
+const NAV_GROUPS: { title: string; items: { id: SectionId; label: string }[] }[] = [
+  {
+    title: "Loja",
+    items: [
+      { id: "dashboard", label: "Visão geral" },
+      { id: "products", label: "Produtos" },
+      { id: "categories", label: "Categorias" },
+      { id: "gallery", label: "Galeria" },
+    ],
+  },
+  {
+    title: "Pedidos",
+    items: [
+      { id: "coupons", label: "Cupons" },
+      { id: "menuLinks", label: "Gerar link" },
+      { id: "orders", label: "Finalização" },
+    ],
+  },
+  {
+    title: "Conteúdo",
+    items: [
+      { id: "faq", label: "FAQ" },
+      { id: "testimonials", label: "Depoimentos" },
+      { id: "steps", label: "Como funciona" },
+      { id: "features", label: "Diferenciais" },
+      { id: "content", label: "Textos e Hero" },
+    ],
+  },
+  {
+    title: "Configurações",
+    items: [
+      { id: "settings", label: "Contato e SEO" },
+      { id: "visibility", label: "Ordem e visibilidade" },
+    ],
+  },
 ];
+
+const NAV = NAV_GROUPS.flatMap((group) => group.items);
 
 export function CmsPanel({ initial }: { initial: CmsData }) {
   const navigate = useNavigate();
@@ -114,11 +136,11 @@ export function CmsPanel({ initial }: { initial: CmsData }) {
     <div className="min-h-screen bg-background text-foreground">
       <div className="flex min-h-screen">
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-border bg-surface transition-transform lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-surface transition-transform lg:static lg:h-auto lg:min-h-screen lg:translate-x-0 ${
             mobileNav ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex h-16 items-center border-b border-border px-5">
+          <div className="flex h-16 shrink-0 items-center border-b border-border px-5">
             <div>
               <div className="font-display text-lg text-gold-gradient">CMS Admin</div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -126,36 +148,49 @@ export function CmsPanel({ initial }: { initial: CmsData }) {
               </div>
             </div>
           </div>
-          <nav className="space-y-1 p-3">
-            {NAV.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setSection(item.id);
-                  setMobileNav(false);
-                }}
-                className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${
-                  section === item.id
-                    ? "bg-gold/15 text-gold"
-                    : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+
+          <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4">
+            <div className="space-y-5">
+              {NAV_GROUPS.map((group) => (
+                <div key={group.title} className="space-y-1">
+                  <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
+                    {group.title}
+                  </p>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setSection(item.id);
+                          setMobileNav(false);
+                        }}
+                        className={`flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm leading-snug transition ${
+                          section === item.id
+                            ? "bg-gold/15 font-medium text-gold"
+                            : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </nav>
-          <div className="absolute bottom-0 inset-x-0 border-t border-border p-3 space-y-2">
+
+          <div className="shrink-0 space-y-1 border-t border-border bg-surface p-3">
             <Link
               to="/"
-              className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+              className="flex w-full items-center rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
             >
               Ver site
             </Link>
             <button
               type="button"
               onClick={() => void onLogout()}
-              className="block w-full rounded-md px-3 py-2 text-left text-sm text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+              className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
             >
               Sair
             </button>
