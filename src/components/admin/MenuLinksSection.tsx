@@ -6,7 +6,7 @@ import {
   upsertCollectionItem,
 } from "@/lib/cms/api";
 import type { CmsData, CmsMenuLink } from "@/lib/cms/types";
-import { buildPublicMenuLink, isDedicatedAdminSubdomain, resolvePublicMenuLinkOrigin } from "@/lib/cms/admin-host";
+import { buildPublicMenuLink, getMenuShareOrigin, isDedicatedAdminSubdomain } from "@/lib/cms/admin-host";
 import { AdminButton, AdminField, AdminInput, VisibilityBadge } from "./ui";
 
 type RunFn = (task: () => Promise<CmsData>, okMessage: string) => Promise<void>;
@@ -34,7 +34,7 @@ export function MenuLinksSection({ cms, busy, run }: { cms: CmsData; busy: boole
     createdAt: new Date().toISOString(),
   };
   const [editing, setEditing] = useState<CmsMenuLink | null>(null);
-  const publicOrigin = resolvePublicMenuLinkOrigin();
+  const publicOrigin = getMenuShareOrigin();
 
   return (
     <div className="space-y-4">

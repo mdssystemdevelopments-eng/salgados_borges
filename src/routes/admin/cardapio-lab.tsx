@@ -2,7 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 
 import { getAdminCms } from "@/lib/cms/api";
-import { buildPublicMenuLink, isDedicatedAdminSubdomain, resolvePublicMenuLinkOrigin } from "@/lib/cms/admin-host";
+import { buildPublicMenuLink, getMenuShareOrigin, isDedicatedAdminSubdomain } from "@/lib/cms/admin-host";
 
 export const Route = createFileRoute("/admin/cardapio-lab")({
   loader: () => getAdminCms(),
@@ -16,7 +16,7 @@ function CardapioLabPage() {
     [cms.menuLinks],
   );
 
-  const publicOrigin = resolvePublicMenuLinkOrigin();
+  const publicOrigin = getMenuShareOrigin();
   const previewPath = activeLink ? `/c/${activeLink.slug}` : null;
   const previewPublicUrl = activeLink ? buildPublicMenuLink(activeLink.slug, publicOrigin) : null;
   const previewFrameSrc =

@@ -1,8 +1,23 @@
 const DEFAULT_ADMIN_HOST = "admincms.salgadosborges.com.br";
 const DEFAULT_PUBLIC_SITE_HOST = "salgadosborges.com.br";
 
+function normalizeHostValue(value: string, fallback: string): string {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return fallback;
+
+  if (trimmed.includes("://")) {
+    try {
+      return new URL(trimmed).hostname.toLowerCase();
+    } catch {
+      /* fall through */
+    }
+  }
+
+  return trimmed.split("/")[0]?.split(":")[0] || fallback;
+}
+
 export function getConfiguredAdminHost(): string {
-  return (process.env.CMS_ADMIN_HOST || DEFAULT_ADMIN_HOST).trim().toLowerCase();
+  return normalizeHostValue(process.env.CMS_ADMIN_HOST || DEFAULT_ADMIN_HOST, DEFAULT_ADMIN_HOST);
 }
 
 /** Host publico do site (sem admincms). */
@@ -39,23 +54,21 @@ export function getPublicSiteOrigin(options?: { protocol?: string }): string {
 }
 
 export function buildPublicMenuLink(slug: string, origin?: string): string {
-  const base = (origin ?? getPublicSiteOrigin()).replace(/\/$/, "");
+  const base = (origin ?? getMenuShareOrigin()).replace(/\/$/, "");
   const clean = slug.trim().toLowerCase().replace(/^\/+|\/+$/g, "");
   return `${base}/c/${clean}`;
 }
 
-/** No browser: usa o site publico quando o CMS roda em admincms.* */
+/** Origem para exibir/copiar links /c/slug — sempre dominio publico. */
+export function getMenuShareOrigin(): string {
+  const protocol =
+    typeof window !== "undefined" ? window.location.protocol.replace(/:$/, "") : undefined;
+  return getPublicSiteOrigin(protocol ? { protocol } : undefined);
+}
+
+/** @deprecated Use getMenuShareOrigin() para links de cardapio. */
 export function resolvePublicMenuLinkOrigin(): string {
-  if (typeof window === "undefined") {
-    return getPublicSiteOrigin();
-  }
-
-  const hostname = window.location.hostname.toLowerCase();
-  if (isDedicatedAdminSubdomain(hostname)) {
-    return getPublicSiteOrigin({ protocol: window.location.protocol.replace(/:$/, "") });
-  }
-
-  return window.location.origin;
+  return getMenuShareOrigin();
 }
 
 export function isPublicMenuPath(pathname: string): boolean {
@@ -96,7 +109,8 @@ export function parseRequestHostname(request: Request): string {
 
 export function isDedicatedAdminSubdomain(hostname: string): boolean {
   const normalized = hostname.trim().toLowerCase();
-  return normalized === getConfiguredAdminHost();
+  if (normalized === getConfiguredAdminHost()) return true;
+  return normalized.startsWith("admincms.");
 }
 
 /** Host pode acessar rotas /admin (subdominio CMS ou localhost em dev). */
