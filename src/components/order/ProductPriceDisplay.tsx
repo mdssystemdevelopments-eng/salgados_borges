@@ -13,20 +13,25 @@ const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" 
 type ProductPriceDisplayProps = {
   product: CmsProduct;
   size?: "card" | "sheet";
+  align?: "start" | "center";
 };
 
 function GramVariationPrices({
   product,
   size,
+  align = "start",
 }: {
   product: CmsProduct;
   size: "card" | "sheet";
+  align?: "start" | "center";
 }) {
   const options = getGramOptions(product);
   const priceSize = size === "sheet" ? "text-xl" : "text-lg";
 
   return (
-    <div className="inline-flex items-stretch gap-0">
+    <div
+      className={`inline-flex items-stretch gap-0 ${align === "center" ? "mx-auto justify-center" : ""}`}
+    >
       {options.map((option, index) => {
         const effective = getEffectiveGramOptionPrice(option);
         const hasPromo =
@@ -60,16 +65,22 @@ function GramVariationPrices({
   );
 }
 
-export function ProductPriceDisplay({ product, size = "card" }: ProductPriceDisplayProps) {
+export function ProductPriceDisplay({
+  product,
+  size = "card",
+  align = "start",
+}: ProductPriceDisplayProps) {
   const priceClass = size === "sheet" ? "font-price text-2xl text-gold" : "font-price text-xl text-gold";
 
   if (isGramVariationEnabled(product)) {
-    return <GramVariationPrices product={product} size={size} />;
+    return <GramVariationPrices product={product} size={size} align={align} />;
   }
 
   const unitPrice = resolveProductUnitPrice(product);
   return (
-    <div className="flex flex-wrap items-baseline gap-2">
+    <div
+      className={`flex flex-wrap items-baseline gap-2 ${align === "center" ? "justify-center" : ""}`}
+    >
       <span className={priceClass}>{BRL.format(unitPrice)}</span>
       {product.promoPrice != null && product.promoPrice < product.price ? (
         <span className="text-sm line-through text-muted-foreground">

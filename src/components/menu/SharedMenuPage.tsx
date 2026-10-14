@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CheckoutFlow } from "@/components/order/CheckoutFlow";
 import { ProductAddSheet } from "@/components/order/ProductAddSheet";
-import { ProductPriceDisplay } from "@/components/order/ProductPriceDisplay";
-import { isGramVariationEnabled } from "@/lib/cms/gram-variation";
+import { ProductCardFooter } from "@/components/order/ProductCardFooter";
 import { PRODUCT_FULFILLMENT_LABELS } from "@/lib/cms/order-defaults";
 import type { CmsData, CmsMenuLink, CmsProduct } from "@/lib/cms/types";
 import { cartSubtotal } from "@/lib/order/pricing";
@@ -135,7 +134,7 @@ export function SharedMenuPage({ cms, menuLink }: SharedMenuPageProps) {
               ))}
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-stretch">
               {filtered.length === 0 ? (
                 <p className="col-span-full text-center text-muted-foreground py-16">
                   Nenhum produto disponível neste cardápio.
@@ -243,10 +242,9 @@ function MenuProductCard({
   onSelect: (p: CmsProduct) => void;
 }) {
   const unavailable = product.available === false;
-  const gramPrices = isGramVariationEnabled(product);
 
   return (
-    <article className="group relative overflow-hidden rounded-xl panel-outline hover:border-gold transition-[border-color,box-shadow] duration-200">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl panel-outline hover:border-gold transition-[border-color,box-shadow] duration-200">
       <div className="aspect-square overflow-hidden bg-muted relative border-b border-border">
         <img
           src={product.image}
@@ -271,41 +269,18 @@ function MenuProductCard({
           {categoryLabel}
         </span>
       </div>
-      <div className="p-4 space-y-2.5">
+      <div className="flex flex-1 flex-col gap-2.5 p-4">
         <h3 className="font-display text-lg leading-tight text-product-title">{product.name}</h3>
         <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
           {product.description}
         </p>
-        <div
-          className={
-            gramPrices && showPrices
-              ? "flex flex-col gap-3 pt-2.5 border-t border-border"
-              : "flex items-center justify-between gap-3 pt-2.5 border-t border-border"
-          }
-        >
-          {showPrices ? (
-            <div className={gramPrices ? "" : "min-w-0 flex-1"}>
-              <ProductPriceDisplay product={product} />
-              {!gramPrices ? (
-                <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                  por {product.unit}
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <span className="text-sm text-muted-foreground">Consulte valores</span>
-          )}
-          {allowOrders ? (
-            <button
-              type="button"
-              disabled={unavailable}
-              onClick={() => onSelect(product)}
-              className={`shrink-0 inline-flex h-10 items-center rounded-full bg-gold-gradient px-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40 ${gramPrices && showPrices ? "self-end" : ""}`}
-            >
-              {unavailable ? "Indisponível" : "Escolher"}
-            </button>
-          ) : null}
-        </div>
+        <ProductCardFooter
+          product={product}
+          unavailable={unavailable}
+          showPrices={showPrices}
+          allowOrders={allowOrders}
+          onSelect={() => onSelect(product)}
+        />
       </div>
     </article>
   );
