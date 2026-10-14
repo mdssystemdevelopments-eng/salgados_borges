@@ -9,12 +9,33 @@ type EvolutionConfig = {
   notifyNumber: string;
 };
 
+type SendPayload = Record<string, unknown>;
+
+type SendAttempt = {
+  url: string;
+  useBearer: boolean;
+  body: SendPayload;
+};
+
 function normalizePhoneDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-/** Formato aceito pela Evolution API v2 (JID ou só dígitos com DDI). */
-function evolutionRecipientNumber(digits: string): string {
+/** DDI 55 quando vier so DDD + numero (comum em env). */
+function normalizeNotifyNumber(digits: string): string {
+  if (digits.length === 10 || digits.length === 11) {
+    return `55${digits}`;
+  }
+  return digits;
+}
+
+function normalizeEvolutionBaseUrl(raw: string): string {
+  let base = raw.trim().replace(/\/$/, "");
+  base = base.replace(/\/message\/sendText(\/.*)?$/i, "");
+  return base;
+}
+
+function evolutionRecipientJid(digits: string): string {
   if (digits.includes("@")) return digits;
   return `${digits}@s.whatsapp.net`;
 }
@@ -28,15 +49,73 @@ function getEvolutionConfig(): EvolutionConfig | null {
 
   if (!baseUrl || !apiKey || !instance) return null;
 
-  const notifyNumber = normalizePhoneDigits(notifyRaw);
-  if (notifyNumber.length < 10) return null;
+  const notifyNumber = normalizeNotifyNumber(normalizePhoneDigits(notifyRaw));
+  if (notifyNumber.length < 12) return null;
 
   return {
-    baseUrl: baseUrl.replace(/\/$/, ""),
+    baseUrl: normalizeEvolutionBaseUrl(baseUrl),
     apiKey,
-    instance,
+    instance: instance.trim(),
     notifyNumber,
   };
+}
+
+function buildSendUrls(baseUrl: string, instance: string): string[] {
+  const encoded = encodeURIComponent(instance);
+  const urls = [`${baseUrl}/message/sendText/${encoded}`];
+  if (!/\/v\d+$/i.test(baseUrl)) {
+    urls.push(`${baseUrl}/v2/message/sendText/${encoded}`);
+    urls.push(`${baseUrl}/v1/message/sendText/${encoded}`);
+  }
+  return urls;
+}
+
+function buildAttempts(config: EvolutionConfig, message: string): SendAttempt[] {
+  const digits = config.notifyNumber;
+  const jid = evolutionRecipientJid(digits);
+  const v2 = (number: string): SendPayload => ({
+    number,
+    text: message,
+    linkPreview: false,
+  });
+  const v1 = (number: string): SendPayload => ({
+    number,
+    textMessage: { text: message },
+    linkPreview: false,
+  });
+
+  const attempts: SendAttempt[] = [];
+  for (const url of buildSendUrls(config.baseUrl, config.instance)) {
+    attempts.push({ url, useBearer: false, body: v2(digits) });
+    attempts.push({ url, useBearer: false, body: v1(digits) });
+    attempts.push({ url, useBearer: false, body: v2(jid) });
+    attempts.push({ url, useBearer: true, body: v2(digits) });
+  }
+  return attempts;
+}
+
+async function postEvolutionSend(
+  url: string,
+  apiKey: string,
+  body: SendPayload,
+  useBearer: boolean,
+): Promise<Response> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (useBearer) headers.Authorization = `Bearer ${apiKey}`;
+  else headers.apikey = apiKey;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 28_000);
+  try {
+    return await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 /** Envia texto via Evolution API para o numero configurado (ex.: loja). */
@@ -44,33 +123,31 @@ export async function sendOrderEvolutionNotification(message: string): Promise<E
   const config = getEvolutionConfig();
   if (!config) return { sent: false, reason: "not_configured" };
 
-  const url = `${config.baseUrl}/message/sendText/${encodeURIComponent(config.instance)}`;
-  const headers = {
-    "Content-Type": "application/json",
-    apikey: config.apiKey,
-  };
-
-  async function postSend(number: string): Promise<Response> {
-    return fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ number, text: message }),
-    });
-  }
+  let lastDetail = "";
 
   try {
-    let response = await postSend(evolutionRecipientNumber(config.notifyNumber));
-    if (!response.ok && response.status >= 400 && response.status < 500) {
-      response = await postSend(config.notifyNumber);
+    for (const attempt of buildAttempts(config, message)) {
+      const response = await postEvolutionSend(
+        attempt.url,
+        config.apiKey,
+        attempt.body,
+        attempt.useBearer,
+      );
+      if (response.ok) {
+        return { sent: true };
+      }
+
+      const detail = (await response.text()).slice(0, 400);
+      lastDetail = `[${response.status}] ${detail || response.statusText}`;
+      console.error("[evolution] attempt failed", attempt.url, lastDetail);
+
+      if (response.status === 401 || response.status === 404) {
+        return { sent: false, reason: "request_failed", detail: lastDetail };
+      }
     }
 
-    if (!response.ok) {
-      const detail = (await response.text()).slice(0, 300);
-      console.error("[evolution] send failed", response.status, detail);
-      return { sent: false, reason: "request_failed", detail };
-    }
-
-    return { sent: true };
+    console.error("[evolution] send failed after retries", lastDetail);
+    return { sent: false, reason: "request_failed", detail: lastDetail };
   } catch (error) {
     console.error("[evolution] send error", error);
     return {
