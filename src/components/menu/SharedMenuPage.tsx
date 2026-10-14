@@ -243,6 +243,7 @@ function MenuProductCard({
   onSelect: (p: CmsProduct) => void;
 }) {
   const unavailable = product.available === false;
+  const gramPrices = isGramVariationEnabled(product);
 
   return (
     <article className="group relative overflow-hidden rounded-xl panel-outline hover:border-gold transition-[border-color,box-shadow] duration-200">
@@ -275,11 +276,17 @@ function MenuProductCard({
         <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
           {product.description}
         </p>
-        <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-border">
+        <div
+          className={
+            gramPrices && showPrices
+              ? "flex flex-col gap-3 pt-2.5 border-t border-border"
+              : "flex items-center justify-between gap-3 pt-2.5 border-t border-border"
+          }
+        >
           {showPrices ? (
-            <div className="min-w-0">
+            <div className={gramPrices ? "" : "min-w-0 flex-1"}>
               <ProductPriceDisplay product={product} />
-              {!isGramVariationEnabled(product) ? (
+              {!gramPrices ? (
                 <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                   por {product.unit}
                 </div>
@@ -293,7 +300,7 @@ function MenuProductCard({
               type="button"
               disabled={unavailable}
               onClick={() => onSelect(product)}
-              className="shrink-0 inline-flex h-10 items-center rounded-full bg-gold-gradient px-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+              className={`shrink-0 inline-flex h-10 items-center rounded-full bg-gold-gradient px-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40 ${gramPrices && showPrices ? "self-end" : ""}`}
             >
               {unavailable ? "Indisponível" : "Escolher"}
             </button>
