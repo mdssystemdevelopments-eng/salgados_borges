@@ -243,11 +243,17 @@ function SalgadosBorgesPage() {
             prepLabel: orderTexts.prepLabel,
             qtyLabel: orderTexts.qtyLabel,
             btnAddToCart: orderTexts.btnAddToCart,
+            checkoutStart: orderTexts.checkoutStart,
             minQtyHint: orderTexts.minQtyHint,
             maxQtyHint: orderTexts.maxQtyHint,
           }}
           onClose={() => setPickProduct(null)}
           onAdd={addLine}
+          onAddAndOpenCart={(item) => {
+            addLine(item);
+            setPickProduct(null);
+            setCartOpen(true);
+          }}
         />
       ) : null}
 

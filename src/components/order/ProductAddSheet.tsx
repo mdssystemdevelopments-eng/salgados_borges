@@ -49,14 +49,23 @@ type ProductAddSheetProps = {
     prepLabel: string;
     qtyLabel: string;
     btnAddToCart: string;
+    checkoutStart: string;
     minQtyHint: string;
     maxQtyHint: string;
   };
   onClose: () => void;
   onAdd: (item: CartLineItem) => void;
+  /** Adiciona o item atual e abre o carrinho / checkout. */
+  onAddAndOpenCart: (item: CartLineItem) => void;
 };
 
-export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSheetProps) {
+export function ProductAddSheet({
+  product,
+  texts,
+  onClose,
+  onAdd,
+  onAddAndOpenCart,
+}: ProductAddSheetProps) {
   const prepOptions = product.prepMethods ?? [];
   const singlePrep = prepOptions.length === 1 ? prepOptions[0] : null;
   const gramEnabled = isGramVariationEnabled(product);
@@ -90,12 +99,12 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
     (!gramEnabled || gramOptionId !== null) &&
     isValidFlavorSelection(product, selectedFlavorIds);
 
-  const add = () => {
-    if (!canAdd) return;
+  const buildLineItem = (): CartLineItem | null => {
+    if (!canAdd) return null;
     let finalQty = qty;
     if (finalQty < minQ) finalQty = minQ;
     if (maxQ != null && finalQty > maxQ) finalQty = maxQ;
-    onAdd({
+    return {
       lineId: newCartLineId(),
       product,
       qty: finalQty,
@@ -103,7 +112,20 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
       gramOptionId: gramEnabled ? gramOptionId : null,
       selectedFlavorIds: flavorEnabled ? selectedFlavorIds : [],
       note: note.trim(),
-    });
+    };
+  };
+
+  const add = () => {
+    const item = buildLineItem();
+    if (!item) return;
+    onAdd(item);
+    onClose();
+  };
+
+  const addAndOpenCart = () => {
+    const item = buildLineItem();
+    if (!item) return;
+    onAddAndOpenCart(item);
     onClose();
   };
 
@@ -223,14 +245,24 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
 
           {product.notes ? <p className="text-xs text-muted-foreground">{product.notes}</p> : null}
 
-          <button
-            type="button"
-            disabled={!canAdd}
-            onClick={add}
-            className="w-full rounded-full bg-gold-gradient py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground shadow-gold-sm disabled:opacity-50"
-          >
-            {texts.btnAddToCart}
-          </button>
+          <div className="space-y-2.5 pt-1">
+            <button
+              type="button"
+              disabled={!canAdd}
+              onClick={add}
+              className="w-full rounded-full bg-gold-gradient py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground shadow-gold-sm disabled:opacity-50"
+            >
+              {texts.btnAddToCart}
+            </button>
+            <button
+              type="button"
+              disabled={!canAdd}
+              onClick={addAndOpenCart}
+              className="w-full rounded-full border-2 border-gold/50 bg-background py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-gold hover:bg-gold/5 disabled:opacity-50"
+            >
+              {texts.checkoutStart}
+            </button>
+          </div>
         </div>
       </div>
     </div>

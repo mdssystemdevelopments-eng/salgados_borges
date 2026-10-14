@@ -214,6 +214,7 @@ export function SharedMenuPage({ cms, menuLink }: SharedMenuPageProps) {
             prepLabel: orderTexts.prepLabel,
             qtyLabel: orderTexts.qtyLabel,
             btnAddToCart: orderTexts.btnAddToCart,
+            checkoutStart: orderTexts.checkoutStart,
             minQtyHint: orderTexts.minQtyHint,
             maxQtyHint: orderTexts.maxQtyHint,
           }}
@@ -221,6 +222,11 @@ export function SharedMenuPage({ cms, menuLink }: SharedMenuPageProps) {
           onAdd={(item) => {
             setCart((prev) => [...prev, item]);
             setPickProduct(null);
+          }}
+          onAddAndOpenCart={(item) => {
+            setCart((prev) => [...prev, item]);
+            setPickProduct(null);
+            setCartOpen(true);
           }}
         />
       ) : null}
