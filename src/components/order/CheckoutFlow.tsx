@@ -757,10 +757,16 @@ export function CheckoutFlow({
           ) : null}
 
           {step === "success" ? (
-            <div className="space-y-4 py-6 text-center">
+            <div
+              className="mx-1 space-y-4 rounded-2xl border-2 border-emerald-600/35 bg-emerald-50/90 px-5 py-8 text-center dark:bg-emerald-950/30"
+              role="status"
+            >
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-2 border-emerald-600/40 bg-white text-2xl shadow-sm dark:bg-card">
+                ✓
+              </div>
               <p className="font-display text-2xl text-foreground">{texts.orderSubmitSuccess}</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {texts.orderSubmitSuccessDetail}
+              <p className="text-sm leading-relaxed text-foreground/90">
+                {texts.orderSubmitSuccessDetail.replace(/\{brand\}/g, cms.content.brandName)}
               </p>
             </div>
           ) : null}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   formatFlavorSelectionHint,
@@ -24,6 +24,24 @@ import { newCartLineId, type CartLineItem } from "@/lib/order/types";
 import { cartLineGramLabel, formatCartLineUnitPrice } from "./ProductPriceDisplay";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+const optionChipClass = (active: boolean, extra = "") =>
+  [
+    "rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-colors shadow-sm",
+    active
+      ? "border-gold bg-gold/20 text-foreground ring-2 ring-gold/30"
+      : "border-foreground/30 bg-card text-foreground hover:border-gold/70 hover:bg-gold/5",
+    extra,
+  ].join(" ");
+
+function OptionSection({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="space-y-2.5 rounded-xl border-2 border-border bg-surface p-3.5">
+      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">{label}</div>
+      {children}
+    </div>
+  );
+}
 
 type ProductAddSheetProps = {
   product: CmsProduct;
@@ -124,34 +142,24 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
           ) : null}
 
           {gramEnabled ? (
-            <div className="space-y-2">
-              <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                Escolha a gramatura
-              </div>
+            <OptionSection label="Escolha a gramatura">
               <div className="flex flex-wrap gap-2">
                 {gramOptions.map((option) => (
                   <button
                     key={option.id}
                     type="button"
                     onClick={() => setGramOptionId(option.id)}
-                    className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                      gramOptionId === option.id
-                        ? "border-gold bg-gold/10 text-foreground"
-                        : "border-border text-muted-foreground hover:border-gold/50"
-                    }`}
+                    className={optionChipClass(gramOptionId === option.id)}
                   >
                     {option.label} · {BRL.format(getEffectiveGramOptionPrice(option))}
                   </button>
                 ))}
               </div>
-            </div>
+            </OptionSection>
           ) : null}
 
           {flavorEnabled ? (
-            <div className="space-y-2">
-              <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                {formatFlavorSelectionHint(product)}
-              </div>
+            <OptionSection label={formatFlavorSelectionHint(product)}>
               <div className="flex flex-wrap gap-2">
                 {flavorOptions.map((option) => {
                   const active = selectedFlavorIds.includes(option.id);
@@ -162,51 +170,39 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
                       type="button"
                       disabled={atMax}
                       onClick={() => toggleFlavor(option.id)}
-                      className={`rounded-full border px-4 py-2 text-sm transition-colors disabled:opacity-40 ${
-                        active
-                          ? "border-gold bg-gold/10 text-foreground"
-                          : "border-border text-muted-foreground hover:border-gold/50"
-                      }`}
+                      className={optionChipClass(active, "disabled:opacity-40 disabled:hover:border-foreground/30")}
                     >
                       {option.name}
                     </button>
                   );
                 })}
               </div>
-            </div>
+            </OptionSection>
           ) : null}
 
           {prepOptions.length > 1 ? (
-            <div className="space-y-2">
-              <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                {texts.prepLabel}
-              </div>
+            <OptionSection label={texts.prepLabel}>
               <div className="flex flex-wrap gap-2">
                 {prepOptions.map((m) => (
                   <button
                     key={m}
                     type="button"
                     onClick={() => setPrep(m)}
-                    className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                      prep === m
-                        ? "border-gold bg-gold/10 text-foreground"
-                        : "border-border text-muted-foreground hover:border-gold/50"
-                    }`}
+                    className={optionChipClass(prep === m)}
                   >
                     {PREP_METHOD_LABELS[m]}
                   </button>
                 ))}
               </div>
-            </div>
+            </OptionSection>
           ) : null}
 
-          <div className="space-y-2">
-            <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-              {texts.qtyLabel}
-            </div>
-            <div className="flex items-center gap-3">
+          <OptionSection label={texts.qtyLabel}>
+            <div className="flex items-center justify-center gap-4 rounded-xl border-2 border-foreground/20 bg-card px-4 py-3">
               <QtyButton onClick={() => setQty((q) => Math.max(minQ, q - 1))}>-</QtyButton>
-              <span className="w-10 text-center text-lg font-medium">{qty}</span>
+              <span className="min-w-[2.5rem] text-center text-xl font-semibold text-foreground">
+                {qty}
+              </span>
               <QtyButton
                 onClick={() => setQty((q) => (maxQ != null ? Math.min(maxQ, q + 1) : q + 1))}
               >
@@ -223,7 +219,7 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
                 {texts.maxQtyHint}: {maxQ}
               </p>
             ) : null}
-          </div>
+          </OptionSection>
 
           {product.notes ? <p className="text-xs text-muted-foreground">{product.notes}</p> : null}
 
@@ -298,7 +294,7 @@ function QtyButton({ children, onClick }: { children: React.ReactNode; onClick: 
     <button
       type="button"
       onClick={onClick}
-      className="h-9 w-9 rounded-full border border-border text-gold hover:border-gold flex items-center justify-center"
+      className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-foreground/35 bg-background text-lg font-semibold text-gold shadow-sm hover:border-gold hover:bg-gold/5"
     >
       {children}
     </button>

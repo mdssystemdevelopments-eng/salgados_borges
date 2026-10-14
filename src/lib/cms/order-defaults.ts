@@ -78,9 +78,9 @@ export function createDefaultCheckoutTexts(): CmsCheckoutTexts {
     btnBack: "Voltar",
     btnNext: "Continuar",
     btnSendWhatsapp: "Fazer pedido",
-    orderSubmitSuccess: "Pedido enviado!",
+    orderSubmitSuccess: "Pedido enviado com sucesso!",
     orderSubmitSuccessDetail:
-      "Recebemos seu pedido. Em breve a salgaderia entrará em contato pelo WhatsApp para confirmar.",
+      "Aguarde! A {brand} recebeu seu pedido e em breve entrará em contato pelo WhatsApp para confirmar valores, entrega e pagamento.",
     orderSubmitFailed:
       "Não foi possível enviar o pedido agora. Verifique sua conexão e tente novamente, ou use os botões de contato do site.",
     orderSubmitFailedNotConfigured:

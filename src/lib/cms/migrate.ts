@@ -83,11 +83,24 @@ export function getEffectiveProductPrice(
 }
 
 const LEGACY_BTN_SEND_WHATSAPP = "Enviar pedido pelo WhatsApp";
+const LEGACY_ORDER_SUCCESS = "Pedido enviado!";
+const LEGACY_ORDER_SUCCESS_DETAIL =
+  "Recebemos seu pedido. Em breve a salgaderia entrará em contato pelo WhatsApp para confirmar.";
 
 function mergeCheckoutTexts(partial?: Partial<CmsCheckoutTexts>): CmsCheckoutTexts {
-  const merged = { ...createDefaultCheckoutTexts(), ...partial };
+  const defaults = createDefaultCheckoutTexts();
+  const merged = { ...defaults, ...partial };
   if (merged.btnSendWhatsapp === LEGACY_BTN_SEND_WHATSAPP) {
-    merged.btnSendWhatsapp = createDefaultCheckoutTexts().btnSendWhatsapp;
+    merged.btnSendWhatsapp = defaults.btnSendWhatsapp;
+  }
+  if (
+    merged.orderSubmitSuccess === LEGACY_ORDER_SUCCESS ||
+    merged.orderSubmitSuccess === "Pedido enviado!"
+  ) {
+    merged.orderSubmitSuccess = defaults.orderSubmitSuccess;
+  }
+  if (merged.orderSubmitSuccessDetail === LEGACY_ORDER_SUCCESS_DETAIL) {
+    merged.orderSubmitSuccessDetail = defaults.orderSubmitSuccessDetail;
   }
   return merged;
 }
