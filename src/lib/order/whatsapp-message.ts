@@ -169,10 +169,16 @@ export function resolveCheckoutPhone(draft: {
   delivery: { phone: string };
   customer: { phone: string };
 }): string {
-  if (draft.fulfillment === "delivery" && draft.delivery.phone.trim()) {
-    return draft.delivery.phone.trim();
+  const deliveryPhone = draft.delivery.phone.trim();
+  const customerPhone = draft.customer.phone.trim();
+
+  if (draft.fulfillment === "delivery") {
+    if (isValidPhone(deliveryPhone)) return deliveryPhone;
+    if (isValidPhone(customerPhone)) return customerPhone;
+    return deliveryPhone || customerPhone;
   }
-  return draft.customer.phone.trim();
+
+  return customerPhone;
 }
 
 export function isValidPhone(phone: string): boolean {

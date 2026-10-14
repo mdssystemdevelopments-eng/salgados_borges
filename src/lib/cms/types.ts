@@ -227,6 +227,8 @@ export type CmsCheckoutTexts = {
   orderSubmitSuccess: string;
   orderSubmitSuccessDetail: string;
   orderSubmitFailed: string;
+  orderSubmitFailedNotConfigured: string;
+  orderSubmitFailedApi: string;
   orderSubmitClose: string;
   btnAddToCart: string;
   prepLabel: string;

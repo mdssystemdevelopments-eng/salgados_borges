@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { redeemCoupon, validateCoupon } from "@/lib/cms/coupon-api";
 import { PREP_METHOD_LABELS } from "@/lib/cms/order-defaults";
@@ -97,6 +97,7 @@ export function CheckoutFlow({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [advanceModal, setAdvanceModal] = useState<OrderAdvanceModalContent | null>(null);
+  const submitFeedbackRef = useRef<HTMLDivElement | null>(null);
 
   const advanceInput = useMemo(
     () => ({
@@ -172,6 +173,24 @@ export function CheckoutFlow({
     };
   }, [draft.coupon, checkoutPhone, items, totals.subtotal]);
 
+  useEffect(() => {
+    if (!submitError) return;
+    submitFeedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [submitError]);
+
+  const canProceedFulfillment = useMemo(() => {
+    if (!draft.fulfillment) return false;
+    if (draft.fulfillment === "pickup") return true;
+    const d = draft.delivery;
+    return (
+      Boolean(d.name.trim()) &&
+      isValidPhone(d.phone) &&
+      Boolean(d.address.trim()) &&
+      Boolean(d.number.trim()) &&
+      Boolean(d.district.trim())
+    );
+  }, [draft.delivery, draft.fulfillment]);
+
   const steps: StepId[] = useMemo(() => {
     const list: StepId[] = ["cart"];
     if (fulfillmentOptions.length > 0) list.push("fulfillment");
@@ -224,9 +243,21 @@ export function CheckoutFlow({
     }
   };
 
+  const evolutionFailureMessage = (
+    result: Awaited<ReturnType<typeof notifyOrderEvolution>>,
+  ): string => {
+    if (result.sent) return "";
+    if (result.reason === "not_configured") return texts.orderSubmitFailedNotConfigured;
+    if (result.reason === "request_failed") return texts.orderSubmitFailedApi;
+    return texts.orderSubmitFailed;
+  };
+
   const submitOrder = async () => {
     const phone = resolveCheckoutPhone(draft);
-    if (!isValidPhone(phone)) return;
+    if (!isValidPhone(phone)) {
+      setSubmitError(texts.phoneInvalid);
+      return;
+    }
 
     const orderDraft: CheckoutDraft = {
       ...draft,
@@ -242,7 +273,10 @@ export function CheckoutFlow({
     setSubmitError("");
     try {
       const advanceOk = await checkAdvanceServer();
-      if (!advanceOk) return;
+      if (!advanceOk) {
+        setSubmitError("");
+        return;
+      }
 
       if (draft.coupon) {
         const preCheck = await validateCoupon({
@@ -268,7 +302,7 @@ export function CheckoutFlow({
       }
 
       if (!notifyResult.sent) {
-        setSubmitError(texts.orderSubmitFailed);
+        setSubmitError(evolutionFailureMessage(notifyResult));
         return;
       }
 
@@ -547,6 +581,9 @@ export function CheckoutFlow({
                   {os.delivery.instructions ? (
                     <p className="text-xs text-muted-foreground">{os.delivery.instructions}</p>
                   ) : null}
+                  {!isValidPhone(draft.delivery.phone) && draft.delivery.phone ? (
+                    <p className="text-sm text-destructive">{texts.phoneInvalid}</p>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -715,7 +752,6 @@ export function CheckoutFlow({
               />
               <TotalsBlock texts={texts} totals={totals} />
               {couponError ? <p className="text-sm text-destructive">{couponError}</p> : null}
-              {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
             </div>
           ) : null}
 
@@ -730,6 +766,16 @@ export function CheckoutFlow({
         </div>
 
         <footer className="border-t border-border p-4 space-y-2 bg-surface">
+          {step === "review" && submitError ? (
+            <div
+              ref={submitFeedbackRef}
+              role="alert"
+              className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-3 text-sm text-destructive"
+            >
+              {submitError}
+            </div>
+          ) : null}
+
           {step !== "cart" && step !== "success" ? (
             <button
               type="button"
@@ -754,7 +800,7 @@ export function CheckoutFlow({
           {step === "fulfillment" ? (
             <button
               type="button"
-              disabled={!draft.fulfillment}
+              disabled={!canProceedFulfillment}
               onClick={goNext}
               className="w-full rounded-full bg-gold-gradient py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground disabled:opacity-50"
             >

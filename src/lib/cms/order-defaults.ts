@@ -83,6 +83,10 @@ export function createDefaultCheckoutTexts(): CmsCheckoutTexts {
       "Recebemos seu pedido. Em breve a salgaderia entrará em contato pelo WhatsApp para confirmar.",
     orderSubmitFailed:
       "Não foi possível enviar o pedido agora. Verifique sua conexão e tente novamente, ou use os botões de contato do site.",
+    orderSubmitFailedNotConfigured:
+      "O envio automático do pedido não está ativo neste servidor. Avise a loja ou use o WhatsApp de contato do site.",
+    orderSubmitFailedApi:
+      "Não conseguimos entregar seu pedido pelo WhatsApp da loja agora. Tente de novo em instantes ou fale conosco pelo contato do site.",
     orderSubmitClose: "Fechar",
     btnAddToCart: "Adicionar ao carrinho",
     prepLabel: "Forma de preparo",
