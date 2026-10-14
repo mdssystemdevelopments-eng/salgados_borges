@@ -87,6 +87,8 @@ export function createDefaultCheckoutTexts(): CmsCheckoutTexts {
       "O envio automático do pedido não está ativo neste servidor. Avise a loja ou use o WhatsApp de contato do site.",
     orderSubmitFailedApi:
       "Não conseguimos entregar seu pedido pelo WhatsApp da loja agora. Tente de novo em instantes ou fale conosco pelo contato do site.",
+    orderSubmitFailedInvalidNumber:
+      "Não foi possível enviar o pedido: o número da loja no sistema está incorreto (use DDI 55, ex.: 5517991005213). Avise o administrador do site.",
     orderSubmitClose: "Fechar",
     btnAddToCart: "Adicionar ao carrinho",
     prepLabel: "Forma de preparo",

@@ -248,6 +248,7 @@ export function CheckoutFlow({
   ): string => {
     if (result.sent) return "";
     if (result.reason === "not_configured") return texts.orderSubmitFailedNotConfigured;
+    if (result.reason === "invalid_recipient") return texts.orderSubmitFailedInvalidNumber;
     if (result.reason === "request_failed") return texts.orderSubmitFailedApi;
     return texts.orderSubmitFailed;
   };

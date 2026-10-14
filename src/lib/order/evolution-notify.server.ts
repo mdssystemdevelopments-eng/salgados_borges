@@ -1,6 +1,10 @@
 export type EvolutionNotifyResult =
   | { sent: true }
-  | { sent: false; reason: "not_configured" | "request_failed"; detail?: string };
+  | {
+      sent: false;
+      reason: "not_configured" | "request_failed" | "invalid_recipient";
+      detail?: string;
+    };
 
 type EvolutionConfig = {
   baseUrl: string;
@@ -21,12 +25,31 @@ function normalizePhoneDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-/** DDI 55 quando vier so DDD + numero (comum em env). */
-function normalizeNotifyNumber(digits: string): string {
-  if (digits.length === 10 || digits.length === 11) {
-    return `55${digits}`;
+/**
+ * Numero BR para WhatsApp: sempre DDI 55 + DDD + numero (ex.: 5517991005213).
+ * Env comum errado: 17991005213 (11 digitos sem 55).
+ */
+export function normalizeNotifyNumber(digits: string): string {
+  let d = digits.replace(/\D/g, "").replace(/^0+/, "");
+  if (!d) return d;
+
+  if (d.startsWith("55") && d.length >= 12) {
+    return d;
   }
-  return digits;
+
+  if (d.length === 10 || d.length === 11) {
+    return `55${d}`;
+  }
+
+  if (!d.startsWith("55") && d.length >= 8 && d.length <= 11) {
+    return `55${d}`;
+  }
+
+  return d;
+}
+
+function evolutionResponseInvalidRecipient(detail: string): boolean {
+  return /"exists"\s*:\s*false/i.test(detail);
 }
 
 function normalizeEvolutionBaseUrl(raw: string): string {
@@ -50,7 +73,7 @@ function getEvolutionConfig(): EvolutionConfig | null {
   if (!baseUrl || !apiKey || !instance) return null;
 
   const notifyNumber = normalizeNotifyNumber(normalizePhoneDigits(notifyRaw));
-  if (notifyNumber.length < 12) return null;
+  if (notifyNumber.length < 12 || !notifyNumber.startsWith("55")) return null;
 
   return {
     baseUrl: normalizeEvolutionBaseUrl(baseUrl),
@@ -123,6 +146,8 @@ export async function sendOrderEvolutionNotification(message: string): Promise<E
   const config = getEvolutionConfig();
   if (!config) return { sent: false, reason: "not_configured" };
 
+  console.info("[evolution] sending order notify to", config.notifyNumber);
+
   let lastDetail = "";
 
   try {
@@ -143,6 +168,10 @@ export async function sendOrderEvolutionNotification(message: string): Promise<E
 
       if (response.status === 401 || response.status === 404) {
         return { sent: false, reason: "request_failed", detail: lastDetail };
+      }
+
+      if (response.status === 400 && evolutionResponseInvalidRecipient(lastDetail)) {
+        return { sent: false, reason: "invalid_recipient", detail: lastDetail };
       }
     }
 
