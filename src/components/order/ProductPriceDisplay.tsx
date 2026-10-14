@@ -1,5 +1,7 @@
+import { Fragment } from "react";
+
 import {
-  formatGramOptionPriceLine,
+  getEffectiveGramOptionPrice,
   getGramOptions,
   isGramVariationEnabled,
   resolveProductUnitPrice,
@@ -13,20 +15,56 @@ type ProductPriceDisplayProps = {
   size?: "card" | "sheet";
 };
 
+function GramVariationPrices({
+  product,
+  size,
+}: {
+  product: CmsProduct;
+  size: "card" | "sheet";
+}) {
+  const options = getGramOptions(product);
+  const priceSize = size === "sheet" ? "text-xl" : "text-lg";
+
+  return (
+    <div className="inline-flex items-stretch gap-0">
+      {options.map((option, index) => {
+        const effective = getEffectiveGramOptionPrice(option);
+        const hasPromo =
+          option.promoPrice != null && option.promoPrice > 0 && option.promoPrice < option.price;
+
+        return (
+          <Fragment key={option.id}>
+            {index > 0 ? (
+              <div
+                className="mx-2.5 w-px shrink-0 self-stretch bg-border/80"
+                aria-hidden
+              />
+            ) : null}
+            <div className="min-w-0 text-left">
+              <span className="block text-[10px] uppercase tracking-[0.14em] text-muted-foreground leading-none mb-1">
+                {option.label}
+              </span>
+              <span className={`font-price ${priceSize} text-gold leading-none tabular-nums`}>
+                {BRL.format(effective)}
+              </span>
+              {hasPromo ? (
+                <span className="block text-[11px] line-through text-muted-foreground mt-0.5 tabular-nums">
+                  {BRL.format(option.price)}
+                </span>
+              ) : null}
+            </div>
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ProductPriceDisplay({ product, size = "card" }: ProductPriceDisplayProps) {
   const priceClass = size === "sheet" ? "font-price text-2xl text-gold" : "font-price text-xl text-gold";
 
   if (isGramVariationEnabled(product)) {
-    const options = getGramOptions(product);
-    return (
-      <div className="space-y-1">
-        {options.map((option) => (
-          <div key={option.id} className={`${priceClass} leading-tight`}>
-            {formatGramOptionPriceLine(option)}
-          </div>
-        ))}
-      </div>
-    );
+    return <GramVariationPrices product={product} size={size} />;
   }
 
   const unitPrice = resolveProductUnitPrice(product);

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckoutFlow } from "@/components/order/CheckoutFlow";
 import { ProductAddSheet } from "@/components/order/ProductAddSheet";
 import { ProductPriceDisplay } from "@/components/order/ProductPriceDisplay";
+import { isGramVariationEnabled } from "@/lib/cms/gram-variation";
 import { PRODUCT_FULFILLMENT_LABELS } from "@/lib/cms/order-defaults";
 import type { CmsData, CmsMenuLink, CmsProduct } from "@/lib/cms/types";
 import { cartSubtotal } from "@/lib/order/pricing";
@@ -278,9 +279,11 @@ function MenuProductCard({
           {showPrices ? (
             <div className="min-w-0">
               <ProductPriceDisplay product={product} />
-              <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                por {product.unit}
-              </div>
+              {!isGramVariationEnabled(product) ? (
+                <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  por {product.unit}
+                </div>
+              ) : null}
             </div>
           ) : (
             <span className="text-sm text-muted-foreground">Consulte valores</span>

@@ -14,11 +14,7 @@ import { lineSubtotal } from "@/lib/order/pricing";
 import type { CmsProduct, PrepMethod } from "@/lib/cms/types";
 import { newCartLineId, type CartLineItem } from "@/lib/order/types";
 
-import {
-  cartLineGramLabel,
-  formatCartLineUnitPrice,
-  ProductPriceDisplay,
-} from "./ProductPriceDisplay";
+import { cartLineGramLabel, formatCartLineUnitPrice } from "./ProductPriceDisplay";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -91,24 +87,17 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
               <p className="mt-2 text-sm text-foreground">{product.extraInfo}</p>
             ) : null}
           </div>
-          <div>
-            {gramEnabled ? (
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <ProductPriceDisplay product={product} size="sheet" />
-                <span className="text-sm text-muted-foreground">/ {product.unit}</span>
-              </div>
-            ) : (
-              <div className="flex items-baseline gap-2">
-                <span className="font-price text-2xl text-gold">{BRL.format(unitPrice)}</span>
-                <span className="text-sm text-muted-foreground">/ {product.unit}</span>
-                {product.promoPrice != null && product.promoPrice < product.price ? (
-                  <span className="text-sm line-through text-muted-foreground">
-                    {BRL.format(product.price)}
-                  </span>
-                ) : null}
-              </div>
-            )}
-          </div>
+          {!gramEnabled ? (
+            <div className="flex items-baseline gap-2">
+              <span className="font-price text-2xl text-gold">{BRL.format(unitPrice)}</span>
+              <span className="text-sm text-muted-foreground">/ {product.unit}</span>
+              {product.promoPrice != null && product.promoPrice < product.price ? (
+                <span className="text-sm line-through text-muted-foreground">
+                  {BRL.format(product.price)}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
 
           {gramEnabled ? (
             <div className="space-y-2">

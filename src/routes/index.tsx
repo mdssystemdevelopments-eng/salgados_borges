@@ -5,6 +5,7 @@ import { CheckoutFlow } from "@/components/order/CheckoutFlow";
 import { ProductAddSheet } from "@/components/order/ProductAddSheet";
 import { getPublicCms } from "@/lib/cms/public-api";
 import { ProductPriceDisplay } from "@/components/order/ProductPriceDisplay";
+import { isGramVariationEnabled } from "@/lib/cms/gram-variation";
 import { PRODUCT_FULFILLMENT_LABELS } from "@/lib/cms/order-defaults";
 import { FOOTER_SECTION_LINKS, NAV_SECTION_META, normalizeSectionOrder } from "@/lib/cms/sections";
 import type { CmsData, CmsPageSection, CmsProduct } from "@/lib/cms/types";
@@ -680,9 +681,11 @@ function ProductCard({
         <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-border">
           <div className="min-w-0">
             <ProductPriceDisplay product={product} />
-            <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-              por {product.unit}
-            </div>
+            {!isGramVariationEnabled(product) ? (
+              <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                por {product.unit}
+              </div>
+            ) : null}
           </div>
           <button
             type="button"
