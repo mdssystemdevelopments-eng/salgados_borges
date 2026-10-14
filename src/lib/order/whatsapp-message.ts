@@ -1,7 +1,8 @@
+import { getFlavorNamesByIds, isFlavorVariationEnabled } from "@/lib/cms/flavor-variation";
 import { getGramOptionById, isGramVariationEnabled } from "@/lib/cms/gram-variation";
 import { PREP_METHOD_LABELS, PRODUCT_FULFILLMENT_LABELS } from "@/lib/cms/order-defaults";
 import type { CmsData, CmsOrderSettings, CmsPaymentMethod } from "@/lib/cms/types";
-import { lineSubtotal, orderTotals } from "./pricing";
+import { lineSubtotal, lineUnitPrice, orderTotals } from "./pricing";
 import type { CartLineItem, CheckoutDraft, FulfillmentType } from "./types";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -15,6 +16,54 @@ function fmtDateBr(iso: string): string {
   return `${d}/${m}/${y}`;
 }
 
+function fmtDateTimeBr(date: Date): string {
+  return date.toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function pushItemWhatsAppLines(lines: string[], item: CartLineItem): void {
+  lines.push(`${item.qty}x ${item.product.name}`);
+
+  const description = item.product.description.trim();
+  if (description) {
+    lines.push(`Descricao: ${description}`);
+  }
+
+  if (isGramVariationEnabled(item.product) && item.gramOptionId) {
+    const gram = getGramOptionById(item.product, item.gramOptionId);
+    if (gram) lines.push(`Gramatura: ${gram.label}`);
+  }
+
+  if (isFlavorVariationEnabled(item.product) && item.selectedFlavorIds.length > 0) {
+    const names = getFlavorNamesByIds(item.product, item.selectedFlavorIds);
+    if (names.length > 0) {
+      lines.push(`Sabores: ${names.join(", ")}`);
+    }
+  }
+
+  if (item.prep) lines.push(`Preparo: ${PREP_METHOD_LABELS[item.prep]}`);
+
+  if (item.product.fulfillmentTag) {
+    lines.push(`Disponibilidade: ${PRODUCT_FULFILLMENT_LABELS[item.product.fulfillmentTag]}`);
+  }
+
+  const unit = lineUnitPrice(item);
+  lines.push(`Unitario: ${fmtMoney(unit)} / ${item.product.unit}`);
+  lines.push(`Subtotal item: ${fmtMoney(lineSubtotal(item))}`);
+
+  if (item.note.trim()) {
+    lines.push(`Obs item: ${item.note.trim()}`);
+  }
+
+  lines.push("");
+}
+
 export function buildOrderWhatsAppMessage(
   cms: CmsData,
   items: CartLineItem[],
@@ -23,56 +72,62 @@ export function buildOrderWhatsAppMessage(
 ): string {
   const { orderSettings } = cms.settings;
   const totals = orderTotals(items, draft.fulfillment, orderSettings, draft.coupon);
-  const orderDate = fmtDateBr(new Date().toISOString().slice(0, 10));
+  const now = fmtDateTimeBr(new Date());
   const lines: string[] = [];
 
   lines.push(`NOVO PEDIDO ${cms.content.brandName.toUpperCase()}`);
-  lines.push("");
-  lines.push("CLIENTE");
-  lines.push(`Nome: ${draft.customer.name}`);
-  lines.push(`Telefone: ${draft.customer.phone}`);
-  lines.push(`Pedido iniciado em: ${orderDate}`);
+  lines.push(`Registrado em: ${now}`);
   lines.push("");
 
+  const customerName = draft.customer.name.trim() || draft.delivery.name.trim();
+  const customerPhone = draft.customer.phone.trim() || draft.delivery.phone.trim();
+
+  lines.push("CLIENTE");
+  lines.push(`Nome: ${customerName || "Nao informado"}`);
+  lines.push(`Telefone: ${customerPhone || "Nao informado"}`);
+
   if (draft.fulfillment === "delivery") {
+    lines.push("");
     lines.push("ENTREGA");
     lines.push("Tipo: Entrega");
+    if (draft.delivery.name.trim() && draft.delivery.name.trim() !== customerName) {
+      lines.push(`Recebedor: ${draft.delivery.name.trim()}`);
+    }
+    if (draft.delivery.phone.trim() && draft.delivery.phone.trim() !== customerPhone) {
+      lines.push(`Telefone entrega: ${draft.delivery.phone.trim()}`);
+    }
     if (draft.date) lines.push(`Data desejada: ${fmtDateBr(draft.date)}`);
     const slot = orderSettings.schedule.timeSlots.find((s) => s.id === draft.timeSlotId);
     if (slot) lines.push(`Horario: ${slot.label}`);
     lines.push("");
-    lines.push("Endereco:");
+    lines.push("Endereco completo:");
     lines.push(`${draft.delivery.address}, ${draft.delivery.number}`);
-    if (draft.delivery.complement) lines.push(draft.delivery.complement);
-    lines.push(draft.delivery.district);
-    if (draft.delivery.cep) lines.push(`CEP: ${draft.delivery.cep}`);
-    if (draft.delivery.reference) lines.push(`Referencia: ${draft.delivery.reference}`);
-    if (draft.delivery.notes) lines.push(`Obs entrega: ${draft.delivery.notes}`);
+    if (draft.delivery.complement.trim()) {
+      lines.push(`Complemento: ${draft.delivery.complement.trim()}`);
+    }
+    lines.push(`Bairro: ${draft.delivery.district}`);
+    if (draft.delivery.cep.trim()) lines.push(`CEP: ${draft.delivery.cep.trim()}`);
+    if (draft.delivery.reference.trim()) {
+      lines.push(`Referencia: ${draft.delivery.reference.trim()}`);
+    }
+    if (draft.delivery.notes.trim()) {
+      lines.push(`Obs entrega: ${draft.delivery.notes.trim()}`);
+    }
   } else if (draft.fulfillment === "pickup") {
+    lines.push("");
     lines.push("RETIRADA");
     lines.push("Tipo: Retirada no local");
     if (draft.date) lines.push(`Data desejada: ${fmtDateBr(draft.date)}`);
     const slot = orderSettings.schedule.timeSlots.find((s) => s.id === draft.timeSlotId);
     if (slot) lines.push(`Horario: ${slot.label}`);
-    lines.push(`Endereco: ${orderSettings.pickup.address}`);
+    lines.push(`Endereco loja: ${orderSettings.pickup.address}`);
     lines.push(`Horario retirada: ${orderSettings.pickup.hours}`);
   }
 
   lines.push("");
-  lines.push("ITENS");
+  lines.push("ITENS DO PEDIDO");
   for (const item of items) {
-    lines.push(`${item.qty}x ${item.product.name}`);
-    if (isGramVariationEnabled(item.product) && item.gramOptionId) {
-      const gram = getGramOptionById(item.product, item.gramOptionId);
-      if (gram) lines.push(`Gramatura: ${gram.label}`);
-    }
-    if (item.prep) lines.push(`Preparo: ${PREP_METHOD_LABELS[item.prep]}`);
-    if (item.product.fulfillmentTag) {
-      lines.push(`Disponibilidade: ${PRODUCT_FULFILLMENT_LABELS[item.product.fulfillmentTag]}`);
-    }
-    if (item.note) lines.push(`Obs: ${item.note}`);
-    lines.push(fmtMoney(lineSubtotal(item)));
-    lines.push("");
+    pushItemWhatsAppLines(lines, item);
   }
 
   lines.push("VALORES");
@@ -81,21 +136,21 @@ export function buildOrderWhatsAppMessage(
     lines.push(`Cupom: ${draft.coupon.code}`);
     lines.push(`Desconto: -${fmtMoney(totals.discount)}`);
   }
-  if (totals.delivery > 0) lines.push(`Entrega: ${fmtMoney(totals.delivery)}`);
+  if (totals.delivery > 0) lines.push(`Taxa entrega: ${fmtMoney(totals.delivery)}`);
   lines.push(`TOTAL: ${fmtMoney(totals.total)}`);
   lines.push("");
   lines.push("PAGAMENTO");
   lines.push(paymentLabel);
-  if (draft.paymentMethodId === "dinheiro" && draft.needsChange && draft.changeFor) {
-    lines.push(`Troco para: ${draft.changeFor}`);
+  if (draft.paymentMethodId === "dinheiro" && draft.needsChange && draft.changeFor.trim()) {
+    lines.push(`Troco para: ${draft.changeFor.trim()}`);
   }
   lines.push("");
-  if (draft.customer.notes) {
-    lines.push("OBSERVACOES");
-    lines.push(draft.customer.notes);
+  if (draft.customer.notes.trim()) {
+    lines.push("OBSERVACOES GERAIS");
+    lines.push(draft.customer.notes.trim());
     lines.push("");
   }
-  lines.push(`Pedido realizado pelo site ${cms.content.brandName}.`);
+  lines.push(`Pedido enviado pelo site ${cms.content.brandName}.`);
 
   return lines.join("\n");
 }

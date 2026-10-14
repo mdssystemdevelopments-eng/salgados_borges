@@ -13,6 +13,20 @@ export type CmsProductGramVariation = {
   options: CmsProductGramOption[];
 };
 
+export type CmsProductFlavorOption = {
+  id: string;
+  name: string;
+};
+
+export type CmsProductFlavorVariation = {
+  enabled: boolean;
+  /** Quantidade minima de sabores que o cliente deve marcar. */
+  minSelect: number;
+  /** Quantidade maxima de sabores permitidos. */
+  maxSelect: number;
+  options: CmsProductFlavorOption[];
+};
+
 /** Disponibilidade / prazo do produto no cardápio. */
 export type ProductFulfillmentTag =
   | "pronta_entrega"
@@ -40,6 +54,8 @@ export type CmsProduct = {
   prepMethods?: PrepMethod[];
   /** Duas opções de peso (ex. 100g / 200g) com preços distintos. */
   gramVariation?: CmsProductGramVariation;
+  /** Sabores opcionais (ex.: recheios) com minimo e maximo de escolhas. */
+  flavorVariation?: CmsProductFlavorVariation;
   /** Etiqueta de pronta entrega, encomenda etc. exibida no cardápio. */
   fulfillmentTag?: ProductFulfillmentTag | null;
   notes?: string;

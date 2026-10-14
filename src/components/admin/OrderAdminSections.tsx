@@ -13,6 +13,7 @@ import {
   PRODUCT_FULFILLMENT_LABELS,
   PRODUCT_FULFILLMENT_TAGS,
 } from "@/lib/cms/order-defaults";
+import { createDefaultFlavorVariation } from "@/lib/cms/flavor-variation";
 import { createDefaultGramOptions } from "@/lib/cms/gram-variation";
 import type {
   CmsCheckoutTexts,
@@ -1053,6 +1054,116 @@ export function ProductGramFields({
         <p className="text-xs text-muted-foreground">
           Quando ativado, o site mostra os dois preços e o cliente escolhe a gramatura ao adicionar ao
           carrinho.
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function ProductFlavorFields({
+  form,
+  setForm,
+}: {
+  form: CmsProduct;
+  setForm: (next: CmsProduct) => void;
+}) {
+  const variation = form.flavorVariation ?? createDefaultFlavorVariation();
+
+  const patchVariation = (patch: Partial<typeof variation>) => {
+    setForm({
+      ...form,
+      flavorVariation: { ...variation, ...patch },
+    });
+  };
+
+  const updateOption = (index: number, name: string) => {
+    const options = [...variation.options];
+    options[index] = { ...options[index], name };
+    patchVariation({ options });
+  };
+
+  const addOption = () => {
+    if (variation.options.length >= 24) return;
+    patchVariation({
+      options: [
+        ...variation.options,
+        { id: `flavor-${Date.now().toString(36)}`, name: "" },
+      ],
+    });
+  };
+
+  const removeOption = (index: number) => {
+    patchVariation({ options: variation.options.filter((_, i) => i !== index) });
+  };
+
+  return (
+    <div className="sm:col-span-2 rounded-lg border border-gold/30 p-4 space-y-4">
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <input
+          type="checkbox"
+          checked={variation.enabled}
+          onChange={(e) => patchVariation({ enabled: e.target.checked })}
+        />
+        Variação de sabores
+      </label>
+
+      {variation.enabled ? (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <AdminField label="Mínimo de sabores">
+              <AdminInput
+                type="number"
+                min={1}
+                max={10}
+                value={variation.minSelect}
+                onChange={(e) =>
+                  patchVariation({ minSelect: Math.max(1, Number(e.target.value) || 1) })
+                }
+              />
+            </AdminField>
+            <AdminField label="Máximo de sabores">
+              <AdminInput
+                type="number"
+                min={1}
+                max={10}
+                value={variation.maxSelect}
+                onChange={(e) =>
+                  patchVariation({ maxSelect: Math.max(1, Number(e.target.value) || 1) })
+                }
+              />
+            </AdminField>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              Sabores disponíveis
+            </div>
+            {variation.options.map((option, index) => (
+              <div key={option.id} className="flex gap-2">
+                <AdminInput
+                  value={option.name}
+                  onChange={(e) => updateOption(index, e.target.value)}
+                  placeholder={`Sabor ${index + 1}`}
+                />
+                <AdminButton
+                  type="button"
+                  variant="ghost"
+                  disabled={variation.options.length <= 1}
+                  onClick={() => removeOption(index)}
+                >
+                  Remover
+                </AdminButton>
+              </div>
+            ))}
+            <AdminButton type="button" variant="ghost" onClick={addOption}>
+              Adicionar sabor
+            </AdminButton>
+          </div>
+        </>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Ative para o cliente escolher sabores ao adicionar o produto (com mínimo e máximo
+          configuráveis).
         </p>
       )}
     </div>

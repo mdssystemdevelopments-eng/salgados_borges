@@ -6,6 +6,7 @@ import {
   createSampleCoupons,
   DEFAULT_PREP_METHODS,
 } from "./order-defaults";
+import { normalizeFlavorVariation } from "./flavor-variation";
 import { normalizeGramVariation, resolveProductUnitPrice } from "./gram-variation";
 import type {
   CmsCheckoutTexts,
@@ -68,6 +69,7 @@ export function normalizeProduct(raw: Partial<CmsProduct> & Pick<CmsProduct, "id
         : defaultPrepForCategory(raw.categoryId ?? ""),
     fulfillmentTag: normalizeFulfillmentTag(raw.fulfillmentTag),
     gramVariation: normalizeGramVariation(raw.gramVariation, price),
+    flavorVariation: normalizeFlavorVariation(raw.flavorVariation),
     notes: raw.notes ?? "",
     extraInfo: raw.extraInfo ?? "",
   };

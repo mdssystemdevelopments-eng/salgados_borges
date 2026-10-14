@@ -270,7 +270,9 @@ function MenuProductCard({
         </span>
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-4">
-        <h3 className="font-display text-lg leading-tight text-product-title">{product.name}</h3>
+        <h3 className="font-display text-lg leading-tight text-product-title text-center">
+          {product.name}
+        </h3>
         <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
           {product.description}
         </p>

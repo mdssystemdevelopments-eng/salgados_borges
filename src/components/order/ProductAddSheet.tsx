@@ -1,6 +1,13 @@
 import { useState } from "react";
 
 import {
+  formatFlavorSelectionHint,
+  getFlavorNamesByIds,
+  getFlavorOptions,
+  isFlavorVariationEnabled,
+  isValidFlavorSelection,
+} from "@/lib/cms/flavor-variation";
+import {
   getEffectiveGramOptionPrice,
   getGramOptions,
   isGramVariationEnabled,
@@ -36,18 +43,34 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
   const singlePrep = prepOptions.length === 1 ? prepOptions[0] : null;
   const gramEnabled = isGramVariationEnabled(product);
   const gramOptions = getGramOptions(product);
+  const flavorEnabled = isFlavorVariationEnabled(product);
+  const flavorOptions = getFlavorOptions(product);
   const [prep, setPrep] = useState<PrepMethod | null>(singlePrep);
   const [gramOptionId, setGramOptionId] = useState<string | null>(
     gramEnabled ? (gramOptions[0]?.id ?? null) : null,
   );
+  const [selectedFlavorIds, setSelectedFlavorIds] = useState<string[]>([]);
   const [qty, setQty] = useState(Math.max(product.minQty ?? 1, 1));
   const [note, setNote] = useState("");
 
   const unitPrice = resolveProductUnitPrice(product, gramOptionId);
   const minQ = product.minQty ?? 1;
   const maxQ = product.maxQty ?? null;
+  const flavorRules = product.flavorVariation;
+  const maxFlavors = flavorRules?.maxSelect ?? 1;
+
+  const toggleFlavor = (id: string) => {
+    setSelectedFlavorIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= maxFlavors) return prev;
+      return [...prev, id];
+    });
+  };
+
   const canAdd =
-    (prepOptions.length === 0 || prep !== null) && (!gramEnabled || gramOptionId !== null);
+    (prepOptions.length === 0 || prep !== null) &&
+    (!gramEnabled || gramOptionId !== null) &&
+    isValidFlavorSelection(product, selectedFlavorIds);
 
   const add = () => {
     if (!canAdd) return;
@@ -60,6 +83,7 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
       qty: finalQty,
       prep,
       gramOptionId: gramEnabled ? gramOptionId : null,
+      selectedFlavorIds: flavorEnabled ? selectedFlavorIds : [],
       note: note.trim(),
     });
     onClose();
@@ -119,6 +143,35 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
                     {option.label} · {BRL.format(getEffectiveGramOptionPrice(option))}
                   </button>
                 ))}
+              </div>
+            </div>
+          ) : null}
+
+          {flavorEnabled ? (
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                {formatFlavorSelectionHint(product)}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {flavorOptions.map((option) => {
+                  const active = selectedFlavorIds.includes(option.id);
+                  const atMax = selectedFlavorIds.length >= maxFlavors && !active;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      disabled={atMax}
+                      onClick={() => toggleFlavor(option.id)}
+                      className={`rounded-full border px-4 py-2 text-sm transition-colors disabled:opacity-40 ${
+                        active
+                          ? "border-gold bg-gold/10 text-foreground"
+                          : "border-border text-muted-foreground hover:border-gold/50"
+                      }`}
+                    >
+                      {option.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : null}
@@ -216,6 +269,11 @@ export function CartLinePreview({ item, onRemove }: { item: CartLineItem; onRemo
           {item.product.unit}
         </div>
         {gramLabel ? <div className="text-xs text-foreground mt-0.5">Gramatura: {gramLabel}</div> : null}
+        {item.selectedFlavorIds.length > 0 ? (
+          <div className="text-xs text-foreground mt-0.5">
+            Sabores: {getFlavorNamesByIds(item.product, item.selectedFlavorIds).join(", ")}
+          </div>
+        ) : null}
         {item.prep ? (
           <div className="text-xs text-foreground mt-0.5">
             Preparo: {PREP_METHOD_LABELS[item.prep]}

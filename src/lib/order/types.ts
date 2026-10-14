@@ -7,6 +7,7 @@ export type CartLineItem = {
   prep: PrepMethod | null;
   /** Opcao de gramas quando o produto tem variacao ativa. */
   gramOptionId: string | null;
+  selectedFlavorIds: string[];
   note: string;
 };
 

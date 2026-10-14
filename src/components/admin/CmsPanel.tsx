@@ -13,6 +13,7 @@ import {
   toggleCollectionItem,
   upsertCollectionItem,
 } from "@/lib/cms/api";
+import { createDefaultFlavorVariation } from "@/lib/cms/flavor-variation";
 import { createDefaultGramOptions, isGramVariationEnabled } from "@/lib/cms/gram-variation";
 import type {
   CmsCollection,
@@ -41,6 +42,7 @@ import {
 import {
   CouponsSection,
   OrderSettingsSection,
+  ProductFlavorFields,
   ProductGramFields,
   ProductPrepFields,
 } from "./OrderAdminSections";
@@ -407,6 +409,7 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
     fulfillmentTag: null,
     featured: false,
     gramVariation: { enabled: false, options: createDefaultGramOptions(0) },
+    flavorVariation: createDefaultFlavorVariation(),
   };
   const [editing, setEditing] = useState<CmsProduct | null>(null);
 
@@ -607,6 +610,7 @@ function ProductEditor({
         </div>
         <ProductPrepFields form={form} setForm={setForm} />
         <ProductGramFields form={form} setForm={setForm} />
+        <ProductFlavorFields form={form} setForm={setForm} />
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
