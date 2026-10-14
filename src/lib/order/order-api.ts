@@ -45,3 +45,20 @@ export const validateOrderAdvance = createServerFn({ method: "POST" })
       fallbackWhatsapp: cms.settings.whatsapp,
     });
   });
+
+/** Notifica pedido via Evolution API (WhatsApp da loja). */
+export const notifyOrderEvolution = createServerFn({ method: "POST" })
+  .validator((data: { message: string }) => {
+    if (!data?.message || typeof data.message !== "string") {
+      throw new Error("Mensagem invalida");
+    }
+    const message = data.message.trim();
+    if (message.length < 10 || message.length > 8000) {
+      throw new Error("Mensagem invalida");
+    }
+    return { message };
+  })
+  .handler(async ({ data }) => {
+    const { sendOrderEvolutionNotification } = await import("@/lib/order/evolution-notify.server");
+    return sendOrderEvolutionNotification(data.message);
+  });

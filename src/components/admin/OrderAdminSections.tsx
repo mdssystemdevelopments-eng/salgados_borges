@@ -13,11 +13,13 @@ import {
   PRODUCT_FULFILLMENT_LABELS,
   PRODUCT_FULFILLMENT_TAGS,
 } from "@/lib/cms/order-defaults";
+import { createDefaultGramOptions } from "@/lib/cms/gram-variation";
 import type {
   CmsCheckoutTexts,
   CmsCoupon,
   CmsData,
   CmsOrderSettings,
+  CmsProduct,
   CmsTimeSlot,
   PrepMethod,
   ProductFulfillmentTag,
@@ -958,5 +960,101 @@ export function ProductPrepFields({
         Disponível para pedido
       </label>
     </>
+  );
+}
+
+export function ProductGramFields({
+  form,
+  setForm,
+}: {
+  form: CmsProduct;
+  setForm: (next: CmsProduct) => void;
+}) {
+  const variation = form.gramVariation ?? {
+    enabled: false,
+    options: createDefaultGramOptions(form.price),
+  };
+
+  const patchVariation = (patch: Partial<typeof variation>) => {
+    setForm({
+      ...form,
+      gramVariation: { ...variation, ...patch },
+    });
+  };
+
+  const patchOption = (index: 0 | 1, patch: Partial<(typeof variation.options)[0]>) => {
+    const options = [...variation.options];
+    options[index] = { ...options[index], ...patch };
+    patchVariation({ options });
+  };
+
+  return (
+    <div className="sm:col-span-2 rounded-lg border border-gold/30 p-4 space-y-4">
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <input
+          type="checkbox"
+          checked={variation.enabled}
+          onChange={(e) => {
+            const enabled = e.target.checked;
+            patchVariation({
+              enabled,
+              options: enabled
+                ? variation.options.length >= 2
+                  ? variation.options
+                  : createDefaultGramOptions(form.price)
+                : variation.options,
+            });
+          }}
+        />
+        Variação por gramas (duas opções de peso)
+      </label>
+
+      {variation.enabled ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {([0, 1] as const).map((index) => {
+            const option = variation.options[index] ?? createDefaultGramOptions(form.price)[index];
+            return (
+              <div key={option.id} className="space-y-3 rounded-md border border-border p-3">
+                <div className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  Opção {index + 1}
+                </div>
+                <AdminField label="Peso / rótulo">
+                  <AdminInput
+                    value={option.label}
+                    onChange={(e) => patchOption(index, { label: e.target.value })}
+                    placeholder="100g"
+                  />
+                </AdminField>
+                <AdminField label="Preço desta opção">
+                  <AdminInput
+                    type="number"
+                    step="0.01"
+                    value={option.price}
+                    onChange={(e) => patchOption(index, { price: Number(e.target.value) })}
+                  />
+                </AdminField>
+                <AdminField label="Preço promocional (opcional)">
+                  <AdminInput
+                    type="number"
+                    step="0.01"
+                    value={option.promoPrice ?? ""}
+                    onChange={(e) =>
+                      patchOption(index, {
+                        promoPrice: e.target.value === "" ? null : Number(e.target.value),
+                      })
+                    }
+                  />
+                </AdminField>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Quando ativado, o site mostra os dois preços e o cliente escolhe a gramatura ao adicionar ao
+          carrinho.
+        </p>
+      )}
+    </div>
   );
 }

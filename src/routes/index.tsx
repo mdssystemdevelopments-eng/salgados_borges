@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckoutFlow } from "@/components/order/CheckoutFlow";
 import { ProductAddSheet } from "@/components/order/ProductAddSheet";
 import { getPublicCms } from "@/lib/cms/public-api";
-import { getEffectiveProductPrice } from "@/lib/cms/migrate";
+import { ProductPriceDisplay } from "@/components/order/ProductPriceDisplay";
 import { PRODUCT_FULFILLMENT_LABELS } from "@/lib/cms/order-defaults";
 import { FOOTER_SECTION_LINKS, NAV_SECTION_META, normalizeSectionOrder } from "@/lib/cms/sections";
 import type { CmsData, CmsPageSection, CmsProduct } from "@/lib/cms/types";
@@ -644,7 +644,6 @@ function ProductCard({
   categoryLabel: string;
   onSelect: (p: CmsProduct) => void;
 }) {
-  const price = getEffectiveProductPrice(product);
   const unavailable = product.available === false;
 
   return (
@@ -674,13 +673,13 @@ function ProductCard({
         </span>
       </div>
       <div className="p-4 space-y-2.5">
-        <h3 className="font-display text-lg leading-tight text-foreground">{product.name}</h3>
+        <h3 className="font-display text-lg leading-tight text-product-title">{product.name}</h3>
         <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
           {product.description}
         </p>
         <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-border">
           <div className="min-w-0">
-            <div className="font-price text-xl text-gold">{BRL.format(price)}</div>
+            <ProductPriceDisplay product={product} />
             <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
               por {product.unit}
             </div>

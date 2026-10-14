@@ -1,5 +1,18 @@
 export type PrepMethod = "congelado" | "frito" | "assado";
 
+export type CmsProductGramOption = {
+  id: string;
+  /** Ex.: 100g, 200g */
+  label: string;
+  price: number;
+  promoPrice?: number | null;
+};
+
+export type CmsProductGramVariation = {
+  enabled: boolean;
+  options: CmsProductGramOption[];
+};
+
 /** Disponibilidade / prazo do produto no cardápio. */
 export type ProductFulfillmentTag =
   | "pronta_entrega"
@@ -25,6 +38,8 @@ export type CmsProduct = {
   maxQty?: number | null;
   available?: boolean;
   prepMethods?: PrepMethod[];
+  /** Duas opções de peso (ex. 100g / 200g) com preços distintos. */
+  gramVariation?: CmsProductGramVariation;
   /** Etiqueta de pronta entrega, encomenda etc. exibida no cardápio. */
   fulfillmentTag?: ProductFulfillmentTag | null;
   notes?: string;

@@ -1,3 +1,4 @@
+import { getGramOptionById, isGramVariationEnabled } from "./gram-variation";
 import type { CmsCoupon, CmsProduct, CouponValidationResult } from "./types";
 import { getEffectiveProductPrice } from "./migrate";
 
@@ -6,7 +7,7 @@ export type ValidateCouponInput = {
   subtotal: number;
   cartProductIds: string[];
   cartCategoryIds: string[];
-  cartLines?: { productId: string; qty: number }[];
+  cartLines?: { productId: string; qty: number; gramOptionId?: string | null }[];
   /** Telefone do cliente (para limite por pessoa). */
   customerPhone?: string;
 };
@@ -110,13 +111,19 @@ export function validateCouponLogic(
   };
 }
 
-export function computeCartSubtotal(items: { product: CmsProduct; qty: number }[]): number {
-  return items.reduce((sum, item) => sum + getEffectiveProductPrice(item.product) * item.qty, 0);
+export function computeCartSubtotal(
+  items: { product: CmsProduct; qty: number; gramOptionId?: string | null }[],
+): number {
+  return items.reduce(
+    (sum, item) =>
+      sum + getEffectiveProductPrice(item.product, item.gramOptionId ?? null) * item.qty,
+    0,
+  );
 }
 
 export function computeCartSubtotalFromLines(
   products: CmsProduct[],
-  lines: { productId: string; qty: number }[],
+  lines: { productId: string; qty: number; gramOptionId?: string | null }[],
 ): number {
   if (lines.length === 0) return 0;
   const map = new Map(products.map((p) => [p.id, p]));
@@ -126,14 +133,17 @@ export function computeCartSubtotalFromLines(
     if (!product || !product.visible || product.available === false) {
       throw new Error("Carrinho invalido");
     }
-    total += getEffectiveProductPrice(product) * line.qty;
+    if (isGramVariationEnabled(product) && !getGramOptionById(product, line.gramOptionId)) {
+      throw new Error("Carrinho invalido");
+    }
+    total += getEffectiveProductPrice(product, line.gramOptionId ?? null) * line.qty;
   }
   return Math.round(total * 100) / 100;
 }
 
 export function cartMetaFromLines(
   products: CmsProduct[],
-  lines: { productId: string; qty: number }[],
+  lines: { productId: string; qty: number; gramOptionId?: string | null }[],
 ): { subtotal: number; cartProductIds: string[]; cartCategoryIds: string[] } {
   const subtotal = computeCartSubtotalFromLines(products, lines);
   const map = new Map(products.map((p) => [p.id, p]));

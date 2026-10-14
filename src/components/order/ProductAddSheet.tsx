@@ -1,13 +1,24 @@
 import { useState } from "react";
 
 import {
+  getEffectiveGramOptionPrice,
+  getGramOptions,
+  isGramVariationEnabled,
+  resolveProductUnitPrice,
+} from "@/lib/cms/gram-variation";
+import {
   PREP_METHOD_LABELS,
   PRODUCT_FULFILLMENT_LABELS,
 } from "@/lib/cms/order-defaults";
-import { getEffectiveProductPrice } from "@/lib/cms/migrate";
-import type { CmsProduct, PrepMethod } from "@/lib/cms/types";
 import { lineSubtotal } from "@/lib/order/pricing";
+import type { CmsProduct, PrepMethod } from "@/lib/cms/types";
 import { newCartLineId, type CartLineItem } from "@/lib/order/types";
+
+import {
+  cartLineGramLabel,
+  formatCartLineUnitPrice,
+  ProductPriceDisplay,
+} from "./ProductPriceDisplay";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -27,14 +38,20 @@ type ProductAddSheetProps = {
 export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSheetProps) {
   const prepOptions = product.prepMethods ?? [];
   const singlePrep = prepOptions.length === 1 ? prepOptions[0] : null;
+  const gramEnabled = isGramVariationEnabled(product);
+  const gramOptions = getGramOptions(product);
   const [prep, setPrep] = useState<PrepMethod | null>(singlePrep);
+  const [gramOptionId, setGramOptionId] = useState<string | null>(
+    gramEnabled ? (gramOptions[0]?.id ?? null) : null,
+  );
   const [qty, setQty] = useState(Math.max(product.minQty ?? 1, 1));
   const [note, setNote] = useState("");
 
-  const unitPrice = getEffectiveProductPrice(product);
+  const unitPrice = resolveProductUnitPrice(product, gramOptionId);
   const minQ = product.minQty ?? 1;
   const maxQ = product.maxQty ?? null;
-  const canAdd = prepOptions.length === 0 || prep !== null;
+  const canAdd =
+    (prepOptions.length === 0 || prep !== null) && (!gramEnabled || gramOptionId !== null);
 
   const add = () => {
     if (!canAdd) return;
@@ -46,6 +63,7 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
       product,
       qty: finalQty,
       prep,
+      gramOptionId: gramEnabled ? gramOptionId : null,
       note: note.trim(),
     });
     onClose();
@@ -60,7 +78,7 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <h3 className="font-display text-2xl text-foreground">{product.name}</h3>
+            <h3 className="font-display text-2xl text-product-title">{product.name}</h3>
             {product.fulfillmentTag ? (
               <span className="mt-2 inline-flex rounded-full border border-emerald-600/40 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-900">
                 {PRODUCT_FULFILLMENT_LABELS[product.fulfillmentTag]}
@@ -73,15 +91,48 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
               <p className="mt-2 text-sm text-foreground">{product.extraInfo}</p>
             ) : null}
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-price text-2xl text-gold">{BRL.format(unitPrice)}</span>
-            <span className="text-sm text-muted-foreground">/ {product.unit}</span>
-            {product.promoPrice != null && product.promoPrice < product.price ? (
-              <span className="text-sm line-through text-muted-foreground">
-                {BRL.format(product.price)}
-              </span>
-            ) : null}
+          <div>
+            {gramEnabled ? (
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <ProductPriceDisplay product={product} size="sheet" />
+                <span className="text-sm text-muted-foreground">/ {product.unit}</span>
+              </div>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="font-price text-2xl text-gold">{BRL.format(unitPrice)}</span>
+                <span className="text-sm text-muted-foreground">/ {product.unit}</span>
+                {product.promoPrice != null && product.promoPrice < product.price ? (
+                  <span className="text-sm line-through text-muted-foreground">
+                    {BRL.format(product.price)}
+                  </span>
+                ) : null}
+              </div>
+            )}
           </div>
+
+          {gramEnabled ? (
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                Escolha a gramatura
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {gramOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setGramOptionId(option.id)}
+                    className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                      gramOptionId === option.id
+                        ? "border-gold bg-gold/10 text-foreground"
+                        : "border-border text-muted-foreground hover:border-gold/50"
+                    }`}
+                  >
+                    {option.label} · {BRL.format(getEffectiveGramOptionPrice(option))}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {prepOptions.length > 1 ? (
             <div className="space-y-2">
@@ -149,6 +200,8 @@ export function ProductAddSheet({ product, texts, onClose, onAdd }: ProductAddSh
 }
 
 export function CartLinePreview({ item, onRemove }: { item: CartLineItem; onRemove?: () => void }) {
+  const gramLabel = cartLineGramLabel(item.product, item.gramOptionId);
+
   return (
     <div className="flex gap-3 border-b border-border pb-3">
       <img
@@ -158,7 +211,7 @@ export function CartLinePreview({ item, onRemove }: { item: CartLineItem; onRemo
       />
       <div className="flex-1 min-w-0">
         <div className="flex justify-between gap-2">
-          <div className="font-medium text-foreground leading-tight">{item.product.name}</div>
+          <div className="font-medium text-product-title leading-tight">{item.product.name}</div>
           {onRemove ? (
             <button
               type="button"
@@ -170,8 +223,10 @@ export function CartLinePreview({ item, onRemove }: { item: CartLineItem; onRemo
           ) : null}
         </div>
         <div className="text-xs text-muted-foreground mt-0.5">
-          {item.qty}x {BRL.format(getEffectiveProductPrice(item.product))} / {item.product.unit}
+          {item.qty}x {formatCartLineUnitPrice(item.product, item.gramOptionId)} /{" "}
+          {item.product.unit}
         </div>
+        {gramLabel ? <div className="text-xs text-foreground mt-0.5">Gramatura: {gramLabel}</div> : null}
         {item.prep ? (
           <div className="text-xs text-foreground mt-0.5">
             Preparo: {PREP_METHOD_LABELS[item.prep]}

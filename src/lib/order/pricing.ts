@@ -3,7 +3,7 @@ import type { CmsOrderSettings } from "@/lib/cms/types";
 import type { AppliedCoupon, CartLineItem, FulfillmentType } from "./types";
 
 export function lineUnitPrice(item: CartLineItem): number {
-  return getEffectiveProductPrice(item.product);
+  return getEffectiveProductPrice(item.product, item.gramOptionId);
 }
 
 export function lineSubtotal(item: CartLineItem): number {

@@ -55,15 +55,19 @@ class CouponRedeemError extends Error {
   }
 }
 
-function parseCartLines(raw: unknown): { productId: string; qty: number }[] {
+function parseCartLines(raw: unknown): { productId: string; qty: number; gramOptionId?: string | null }[] {
   if (!Array.isArray(raw)) return [];
-  const lines: { productId: string; qty: number }[] = [];
+  const lines: { productId: string; qty: number; gramOptionId?: string | null }[] = [];
   for (const item of raw.slice(0, 50)) {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
     const productId = typeof row.productId === "string" ? row.productId.trim().slice(0, 80) : "";
     const qty = Math.max(1, Math.min(999, Math.floor(Number(row.qty) || 1)));
-    if (productId) lines.push({ productId, qty });
+    const gramOptionId =
+      typeof row.gramOptionId === "string" && row.gramOptionId.trim()
+        ? row.gramOptionId.trim().slice(0, 40)
+        : null;
+    if (productId) lines.push({ productId, qty, gramOptionId });
   }
   return lines;
 }

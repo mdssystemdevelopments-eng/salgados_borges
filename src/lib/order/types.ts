@@ -5,7 +5,15 @@ export type CartLineItem = {
   product: CmsProduct;
   qty: number;
   prep: PrepMethod | null;
+  /** Opcao de gramas quando o produto tem variacao ativa. */
+  gramOptionId: string | null;
   note: string;
+};
+
+export type CartLineMeta = {
+  productId: string;
+  qty: number;
+  gramOptionId?: string | null;
 };
 
 export type FulfillmentType = "delivery" | "pickup";

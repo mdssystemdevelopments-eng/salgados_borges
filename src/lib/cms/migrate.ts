@@ -6,6 +6,7 @@ import {
   createSampleCoupons,
   DEFAULT_PREP_METHODS,
 } from "./order-defaults";
+import { normalizeGramVariation, resolveProductUnitPrice } from "./gram-variation";
 import type {
   CmsCheckoutTexts,
   CmsCoupon,
@@ -66,16 +67,17 @@ export function normalizeProduct(raw: Partial<CmsProduct> & Pick<CmsProduct, "id
           )
         : defaultPrepForCategory(raw.categoryId ?? ""),
     fulfillmentTag: normalizeFulfillmentTag(raw.fulfillmentTag),
+    gramVariation: normalizeGramVariation(raw.gramVariation, price),
     notes: raw.notes ?? "",
     extraInfo: raw.extraInfo ?? "",
   };
 }
 
-export function getEffectiveProductPrice(product: CmsProduct): number {
-  if (product.promoPrice != null && product.promoPrice > 0 && product.promoPrice < product.price) {
-    return product.promoPrice;
-  }
-  return product.price;
+export function getEffectiveProductPrice(
+  product: CmsProduct,
+  gramOptionId?: string | null,
+): number {
+  return resolveProductUnitPrice(product, gramOptionId);
 }
 
 function mergeCheckoutTexts(partial?: Partial<CmsCheckoutTexts>): CmsCheckoutTexts {

@@ -1,3 +1,4 @@
+import { getGramOptionById, isGramVariationEnabled } from "@/lib/cms/gram-variation";
 import { PREP_METHOD_LABELS, PRODUCT_FULFILLMENT_LABELS } from "@/lib/cms/order-defaults";
 import type { CmsData, CmsOrderSettings, CmsPaymentMethod } from "@/lib/cms/types";
 import { lineSubtotal, orderTotals } from "./pricing";
@@ -61,6 +62,10 @@ export function buildOrderWhatsAppMessage(
   lines.push("ITENS");
   for (const item of items) {
     lines.push(`${item.qty}x ${item.product.name}`);
+    if (isGramVariationEnabled(item.product) && item.gramOptionId) {
+      const gram = getGramOptionById(item.product, item.gramOptionId);
+      if (gram) lines.push(`Gramatura: ${gram.label}`);
+    }
     if (item.prep) lines.push(`Preparo: ${PREP_METHOD_LABELS[item.prep]}`);
     if (item.product.fulfillmentTag) {
       lines.push(`Disponibilidade: ${PRODUCT_FULFILLMENT_LABELS[item.product.fulfillmentTag]}`);

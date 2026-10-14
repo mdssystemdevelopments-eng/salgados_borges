@@ -13,6 +13,7 @@ import {
   toggleCollectionItem,
   upsertCollectionItem,
 } from "@/lib/cms/api";
+import { createDefaultGramOptions, isGramVariationEnabled } from "@/lib/cms/gram-variation";
 import type {
   CmsCollection,
   CmsContent,
@@ -37,7 +38,12 @@ import {
   ImageUploadField,
   VisibilityBadge,
 } from "./ui";
-import { CouponsSection, OrderSettingsSection, ProductPrepFields } from "./OrderAdminSections";
+import {
+  CouponsSection,
+  OrderSettingsSection,
+  ProductGramFields,
+  ProductPrepFields,
+} from "./OrderAdminSections";
 import { MenuLinksSection } from "./MenuLinksSection";
 
 type SectionId =
@@ -400,6 +406,7 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
     minQty: 1,
     fulfillmentTag: null,
     featured: false,
+    gramVariation: { enabled: false, options: createDefaultGramOptions(0) },
   };
   const [editing, setEditing] = useState<CmsProduct | null>(null);
 
@@ -446,8 +453,21 @@ function ProductsSection({ cms, busy, run }: { cms: CmsData; busy: boolean; run:
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {p.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} /{" "}
-                    {p.unit}
+                    {isGramVariationEnabled(p) ? (
+                      <div className="space-y-0.5 text-xs">
+                        {p.gramVariation!.options.slice(0, 2).map((opt) => (
+                          <div key={opt.id}>
+                            {opt.label}:{" "}
+                            {opt.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        {p.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} /{" "}
+                        {p.unit}
+                      </>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <VisibilityBadge visible={p.visible} />
@@ -586,6 +606,7 @@ function ProductEditor({
           />
         </div>
         <ProductPrepFields form={form} setForm={setForm} />
+        <ProductGramFields form={form} setForm={setForm} />
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"

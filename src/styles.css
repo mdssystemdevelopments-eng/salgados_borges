@@ -437,3 +437,7 @@
 .shared-menu-fab {
   box-shadow: var(--shadow-gold);
 }
+
+@utility text-product-title {
+  color: #0a0a0a;
+}

@@ -2,15 +2,14 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { redeemCoupon, validateCoupon } from "@/lib/cms/coupon-api";
 import { PREP_METHOD_LABELS } from "@/lib/cms/order-defaults";
-import { getEffectiveProductPrice } from "@/lib/cms/migrate";
 import type { CmsData } from "@/lib/cms/types";
 import {
   toAdvanceCartLines,
   validateOrderAdvanceLogic,
   type OrderAdvanceModalContent,
 } from "@/lib/order/advance";
-import { validateOrderAdvance } from "@/lib/order/order-api";
-import { orderTotals } from "@/lib/order/pricing";
+import { notifyOrderEvolution, validateOrderAdvance } from "@/lib/order/order-api";
+import { lineUnitPrice, orderTotals } from "@/lib/order/pricing";
 import { availableTimeSlots, isDateAvailable, minSelectableDate } from "@/lib/order/schedule";
 import {
   buildOrderWhatsAppMessage,
@@ -56,7 +55,11 @@ function buildCouponRequest(
     subtotal,
     cartProductIds: items.map((i) => i.product.id),
     cartCategoryIds: [...new Set(items.map((i) => i.product.categoryId))],
-    cartLines: items.map((i) => ({ productId: i.product.id, qty: i.qty })),
+    cartLines: items.map((i) => ({
+      productId: i.product.id,
+      qty: i.qty,
+      gramOptionId: i.gramOptionId,
+    })),
     customerPhone,
   };
 }
@@ -263,6 +266,13 @@ export function CheckoutFlow({
 
       const label = paymentMethodLabel(os.paymentMethods, orderDraft.paymentMethodId);
       const msg = buildOrderWhatsAppMessage(cms, items, orderDraft, label);
+
+      try {
+        await notifyOrderEvolution({ data: { message: msg } });
+      } catch {
+        /* Evolution opcional; nao bloqueia o pedido */
+      }
+
       window.open(waLink(cms.settings.whatsapp, msg), "_blank");
       onClearCart();
       resetCheckout();
@@ -653,7 +663,7 @@ export function CheckoutFlow({
                     {item.qty}x {item.product.name}
                     {item.prep ? ` (${PREP_METHOD_LABELS[item.prep]})` : ""}
                     <span className="float-right text-gold">
-                      {formatBRL(item.qty * getEffectiveProductPrice(item.product))}
+                      {formatBRL(item.qty * lineUnitPrice(item))}
                     </span>
                   </div>
                 ))}
