@@ -77,7 +77,13 @@ export function createDefaultCheckoutTexts(): CmsCheckoutTexts {
     changeFor: "Troco para quanto?",
     btnBack: "Voltar",
     btnNext: "Continuar",
-    btnSendWhatsapp: "Enviar pedido pelo WhatsApp",
+    btnSendWhatsapp: "Fazer pedido",
+    orderSubmitSuccess: "Pedido enviado!",
+    orderSubmitSuccessDetail:
+      "Recebemos seu pedido. Em breve a salgaderia entrará em contato pelo WhatsApp para confirmar.",
+    orderSubmitFailed:
+      "Não foi possível enviar o pedido agora. Verifique sua conexão e tente novamente, ou use os botões de contato do site.",
+    orderSubmitClose: "Fechar",
     btnAddToCart: "Adicionar ao carrinho",
     prepLabel: "Forma de preparo",
     qtyLabel: "Quantidade",

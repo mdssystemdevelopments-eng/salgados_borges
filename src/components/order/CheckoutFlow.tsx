@@ -17,7 +17,6 @@ import {
   paymentMethodLabel,
   resolveCheckoutPhone,
   resolveFulfillmentOptions,
-  waLink,
 } from "@/lib/order/whatsapp-message";
 import {
   emptyCustomerForm,
@@ -28,7 +27,7 @@ import {
 import { CartLinePreview, formatBRL } from "./ProductAddSheet";
 import { OrderAdvanceModal } from "./OrderAdvanceModal";
 
-type StepId = "cart" | "fulfillment" | "schedule" | "payment" | "customer" | "review";
+type StepId = "cart" | "fulfillment" | "schedule" | "payment" | "customer" | "review" | "success";
 
 type CheckoutFlowProps = {
   open: boolean;
@@ -96,6 +95,7 @@ export function CheckoutFlow({
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [advanceModal, setAdvanceModal] = useState<OrderAdvanceModalContent | null>(null);
 
   const advanceInput = useMemo(
@@ -139,6 +139,7 @@ export function CheckoutFlow({
     setCouponError("");
     setCouponLoading(false);
     setSubmitting(false);
+    setSubmitError("");
     setAdvanceModal(null);
   };
 
@@ -223,7 +224,7 @@ export function CheckoutFlow({
     }
   };
 
-  const sendWhatsapp = async () => {
+  const submitOrder = async () => {
     const phone = resolveCheckoutPhone(draft);
     if (!isValidPhone(phone)) return;
 
@@ -238,6 +239,7 @@ export function CheckoutFlow({
 
     setSubmitting(true);
     setCouponError("");
+    setSubmitError("");
     try {
       const advanceOk = await checkAdvanceServer();
       if (!advanceOk) return;
@@ -252,7 +254,25 @@ export function CheckoutFlow({
           setStep("cart");
           return;
         }
+      }
 
+      const label = paymentMethodLabel(os.paymentMethods, orderDraft.paymentMethodId);
+      const msg = buildOrderWhatsAppMessage(cms, items, orderDraft, label);
+
+      let notifyResult: Awaited<ReturnType<typeof notifyOrderEvolution>>;
+      try {
+        notifyResult = await notifyOrderEvolution({ data: { message: msg } });
+      } catch {
+        setSubmitError(texts.orderSubmitFailed);
+        return;
+      }
+
+      if (!notifyResult.sent) {
+        setSubmitError(texts.orderSubmitFailed);
+        return;
+      }
+
+      if (draft.coupon) {
         const redeemResult = await redeemCoupon({
           data: buildCouponRequest(draft.coupon.code, items, totals.subtotal, phone),
         });
@@ -264,25 +284,19 @@ export function CheckoutFlow({
         }
       }
 
-      const label = paymentMethodLabel(os.paymentMethods, orderDraft.paymentMethodId);
-      const msg = buildOrderWhatsAppMessage(cms, items, orderDraft, label);
-
-      try {
-        await notifyOrderEvolution({ data: { message: msg } });
-      } catch {
-        /* Evolution opcional; nao bloqueia o pedido */
-      }
-
-      window.open(waLink(cms.settings.whatsapp, msg), "_blank");
       onClearCart();
-      resetCheckout();
       onOrderComplete?.();
-      onClose();
+      setStep("success");
     } catch {
-      setCouponError(texts.couponInvalid);
+      setSubmitError(texts.orderSubmitFailed);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const finishAfterSuccess = () => {
+    resetCheckout();
+    onClose();
   };
 
   const canProceedSchedule =
@@ -304,12 +318,20 @@ export function CheckoutFlow({
         />
       ) : null}
 
-      <div className="fixed inset-0 z-[70] bg-black/40" onClick={onClose} aria-hidden />
+      <div
+        className="fixed inset-0 z-[70] bg-black/40"
+        onClick={() => (step === "success" ? finishAfterSuccess() : onClose())}
+        aria-hidden
+      />
       <aside className="fixed top-0 right-0 z-[71] flex h-full w-full max-w-lg flex-col bg-card border-l border-border shadow-2xl">
         <header className="flex items-center justify-between border-b border-border px-4 py-4">
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              {step === "cart" ? texts.cartTitle : texts.checkoutStart}
+              {step === "success"
+                ? texts.orderSubmitSuccess
+                : step === "cart"
+                  ? texts.cartTitle
+                  : texts.checkoutStart}
             </div>
             <div className="font-display text-xl text-foreground">
               {step === "cart" && texts.cartTitle}
@@ -318,11 +340,12 @@ export function CheckoutFlow({
               {step === "payment" && texts.stepPayment}
               {step === "customer" && texts.stepCustomer}
               {step === "review" && texts.stepReview}
+              {step === "success" && texts.orderSubmitSuccess}
             </div>
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => (step === "success" ? finishAfterSuccess() : onClose())}
             className="text-sm uppercase tracking-[0.12em] text-muted-foreground hover:text-gold"
           >
             Fechar
@@ -692,12 +715,22 @@ export function CheckoutFlow({
               />
               <TotalsBlock texts={texts} totals={totals} />
               {couponError ? <p className="text-sm text-destructive">{couponError}</p> : null}
+              {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
+            </div>
+          ) : null}
+
+          {step === "success" ? (
+            <div className="space-y-4 py-6 text-center">
+              <p className="font-display text-2xl text-foreground">{texts.orderSubmitSuccess}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {texts.orderSubmitSuccessDetail}
+              </p>
             </div>
           ) : null}
         </div>
 
         <footer className="border-t border-border p-4 space-y-2 bg-surface">
-          {step !== "cart" ? (
+          {step !== "cart" && step !== "success" ? (
             <button
               type="button"
               onClick={goBack}
@@ -769,10 +802,20 @@ export function CheckoutFlow({
             <button
               type="button"
               disabled={submitting}
-              onClick={() => void sendWhatsapp()}
+              onClick={() => void submitOrder()}
               className="w-full rounded-full bg-gold-gradient py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground disabled:opacity-50"
             >
-              {texts.btnSendWhatsapp}
+              {submitting ? "Enviando…" : texts.btnSendWhatsapp}
+            </button>
+          ) : null}
+
+          {step === "success" ? (
+            <button
+              type="button"
+              onClick={finishAfterSuccess}
+              className="w-full rounded-full bg-gold-gradient py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground"
+            >
+              {texts.orderSubmitClose}
             </button>
           ) : null}
         </footer>

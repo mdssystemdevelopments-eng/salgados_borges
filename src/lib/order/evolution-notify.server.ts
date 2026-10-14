@@ -13,6 +13,12 @@ function normalizePhoneDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+/** Formato aceito pela Evolution API v2 (JID ou só dígitos com DDI). */
+function evolutionRecipientNumber(digits: string): string {
+  if (digits.includes("@")) return digits;
+  return `${digits}@s.whatsapp.net`;
+}
+
 function getEvolutionConfig(): EvolutionConfig | null {
   const baseUrl = process.env.EVOLUTION_API_URL?.trim();
   const apiKey = process.env.EVOLUTION_API_KEY?.trim();
@@ -39,19 +45,24 @@ export async function sendOrderEvolutionNotification(message: string): Promise<E
   if (!config) return { sent: false, reason: "not_configured" };
 
   const url = `${config.baseUrl}/message/sendText/${encodeURIComponent(config.instance)}`;
+  const headers = {
+    "Content-Type": "application/json",
+    apikey: config.apiKey,
+  };
+
+  async function postSend(number: string): Promise<Response> {
+    return fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ number, text: message }),
+    });
+  }
 
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: config.apiKey,
-      },
-      body: JSON.stringify({
-        number: config.notifyNumber,
-        text: message,
-      }),
-    });
+    let response = await postSend(evolutionRecipientNumber(config.notifyNumber));
+    if (!response.ok && response.status >= 400 && response.status < 500) {
+      response = await postSend(config.notifyNumber);
+    }
 
     if (!response.ok) {
       const detail = (await response.text()).slice(0, 300);

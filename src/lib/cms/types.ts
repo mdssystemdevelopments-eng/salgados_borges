@@ -224,6 +224,10 @@ export type CmsCheckoutTexts = {
   btnBack: string;
   btnNext: string;
   btnSendWhatsapp: string;
+  orderSubmitSuccess: string;
+  orderSubmitSuccessDetail: string;
+  orderSubmitFailed: string;
+  orderSubmitClose: string;
   btnAddToCart: string;
   prepLabel: string;
   qtyLabel: string;

@@ -82,8 +82,14 @@ export function getEffectiveProductPrice(
   return resolveProductUnitPrice(product, gramOptionId);
 }
 
+const LEGACY_BTN_SEND_WHATSAPP = "Enviar pedido pelo WhatsApp";
+
 function mergeCheckoutTexts(partial?: Partial<CmsCheckoutTexts>): CmsCheckoutTexts {
-  return { ...createDefaultCheckoutTexts(), ...partial };
+  const merged = { ...createDefaultCheckoutTexts(), ...partial };
+  if (merged.btnSendWhatsapp === LEGACY_BTN_SEND_WHATSAPP) {
+    merged.btnSendWhatsapp = createDefaultCheckoutTexts().btnSendWhatsapp;
+  }
+  return merged;
 }
 
 function mergePaymentMethods(methods?: CmsPaymentMethod[]): CmsPaymentMethod[] {
