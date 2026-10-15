@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import {
   formatFlavorSelectionHint,
@@ -25,6 +25,8 @@ import { cartLineGramLabel, formatCartLineUnitPrice } from "./ProductPriceDispla
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
+const optionRowClass = "flex flex-wrap justify-center gap-2";
+
 const optionChipClass = (active: boolean, extra = "") =>
   [
     "rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-colors shadow-sm",
@@ -36,8 +38,10 @@ const optionChipClass = (active: boolean, extra = "") =>
 
 function OptionSection({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="space-y-2.5 rounded-xl border-2 border-border bg-surface p-3.5">
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">{label}</div>
+    <div className="space-y-2 rounded-xl border-2 border-border bg-surface p-3 text-center">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground">
+        {label}
+      </div>
       {children}
     </div>
   );
@@ -129,43 +133,82 @@ export function ProductAddSheet({
     onClose();
   };
 
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    const scrollbarGap = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (scrollbarGap > 0) {
+      document.body.style.paddingRight = `${scrollbarGap}px`;
+    }
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4 overscroll-none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="product-add-sheet-title"
+    >
       <button type="button" className="absolute inset-0" aria-label="Fechar" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-card border border-border shadow-xl">
-        <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
-          <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <h3 className="font-display text-2xl text-product-title">{product.name}</h3>
+      <div className="relative z-10 flex w-full max-w-lg max-h-[min(92dvh,720px)] flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-xl sm:max-h-[min(88vh,720px)] sm:rounded-2xl">
+        <div className="flex shrink-0 items-start gap-3 border-b border-border p-4 pr-3">
+          <img
+            src={product.image}
+            alt=""
+            className="h-[4.5rem] w-[4.5rem] shrink-0 rounded-xl border border-border object-cover sm:h-20 sm:w-20"
+          />
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h3
+              id="product-add-sheet-title"
+              className="font-display text-xl leading-tight text-product-title sm:text-2xl"
+            >
+              {product.name}
+            </h3>
             {product.fulfillmentTag ? (
-              <span className="mt-2 inline-flex rounded-full border border-emerald-600/40 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-900">
+              <span className="mt-1.5 inline-flex rounded-full border border-emerald-600/40 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-900">
                 {PRODUCT_FULFILLMENT_LABELS[product.fulfillmentTag]}
               </span>
             ) : null}
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              {product.description}
-            </p>
-            {product.extraInfo ? (
-              <p className="mt-2 text-sm text-foreground">{product.extraInfo}</p>
+            {!gramEnabled ? (
+              <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span className="font-price text-lg text-gold sm:text-xl">{BRL.format(unitPrice)}</span>
+                <span className="text-xs text-muted-foreground">/ {product.unit}</span>
+                {product.promoPrice != null && product.promoPrice < product.price ? (
+                  <span className="text-xs line-through text-muted-foreground">
+                    {BRL.format(product.price)}
+                  </span>
+                ) : null}
+              </div>
             ) : null}
           </div>
-          {!gramEnabled ? (
-            <div className="flex items-baseline gap-2">
-              <span className="font-price text-2xl text-gold">{BRL.format(unitPrice)}</span>
-              <span className="text-sm text-muted-foreground">/ {product.unit}</span>
-              {product.promoPrice != null && product.promoPrice < product.price ? (
-                <span className="text-sm line-through text-muted-foreground">
-                  {BRL.format(product.price)}
-                </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-lg leading-none text-muted-foreground transition-colors hover:border-gold hover:text-foreground"
+            aria-label="Fechar opções"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5 sm:py-4">
+          {product.description || product.extraInfo ? (
+            <div className="space-y-1 text-center text-sm leading-relaxed text-muted-foreground">
+              {product.description ? <p className="line-clamp-3">{product.description}</p> : null}
+              {product.extraInfo ? (
+                <p className="text-foreground line-clamp-2">{product.extraInfo}</p>
               ) : null}
             </div>
           ) : null}
 
           {gramEnabled ? (
             <OptionSection label="Escolha a gramatura">
-              <div className="flex flex-wrap gap-2">
+              <div className={optionRowClass}>
                 {gramOptions.map((option) => (
                   <button
                     key={option.id}
@@ -182,7 +225,7 @@ export function ProductAddSheet({
 
           {flavorEnabled ? (
             <OptionSection label={formatFlavorSelectionHint(product)}>
-              <div className="flex flex-wrap gap-2">
+              <div className={optionRowClass}>
                 {flavorOptions.map((option) => {
                   const active = selectedFlavorIds.includes(option.id);
                   const atMax = selectedFlavorIds.length >= maxFlavors && !active;
@@ -204,7 +247,7 @@ export function ProductAddSheet({
 
           {prepOptions.length > 1 ? (
             <OptionSection label={texts.prepLabel}>
-              <div className="flex flex-wrap gap-2">
+              <div className={optionRowClass}>
                 {prepOptions.map((m) => (
                   <button
                     key={m}
@@ -243,26 +286,28 @@ export function ProductAddSheet({
             ) : null}
           </OptionSection>
 
-          {product.notes ? <p className="text-xs text-muted-foreground">{product.notes}</p> : null}
+          {product.notes ? (
+            <p className="text-center text-xs text-muted-foreground">{product.notes}</p>
+          ) : null}
+        </div>
 
-          <div className="space-y-2.5 pt-1">
-            <button
-              type="button"
-              disabled={!canAdd}
-              onClick={add}
-              className="w-full rounded-full bg-gold-gradient py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground shadow-gold-sm disabled:opacity-50"
-            >
-              {texts.btnAddToCart}
-            </button>
-            <button
-              type="button"
-              disabled={!canAdd}
-              onClick={addAndOpenCart}
-              className="w-full rounded-full border-2 border-gold/50 bg-background py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-gold hover:bg-gold/5 disabled:opacity-50"
-            >
-              {texts.checkoutStart}
-            </button>
-          </div>
+        <div className="shrink-0 space-y-2 border-t border-border bg-card px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-4">
+          <button
+            type="button"
+            disabled={!canAdd}
+            onClick={add}
+            className="w-full rounded-full bg-gold-gradient py-3 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground shadow-gold-sm disabled:opacity-50 sm:py-3.5"
+          >
+            {texts.btnAddToCart}
+          </button>
+          <button
+            type="button"
+            disabled={!canAdd}
+            onClick={addAndOpenCart}
+            className="w-full rounded-full border-2 border-gold/50 bg-background py-3 text-sm font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-gold hover:bg-gold/5 disabled:opacity-50 sm:py-3.5"
+          >
+            {texts.checkoutStart}
+          </button>
         </div>
       </div>
     </div>
