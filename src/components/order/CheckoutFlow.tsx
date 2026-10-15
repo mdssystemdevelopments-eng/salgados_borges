@@ -11,9 +11,11 @@ import {
 import { notifyOrderEvolution, validateOrderAdvance } from "@/lib/order/order-api";
 import { lineUnitPrice, orderTotals } from "@/lib/order/pricing";
 import {
+  isCartScheduleSelectionValid,
   scheduleNoticeForKind,
   strictestFulfillmentLabel,
   suggestCartSchedule,
+  validCartTimeSlotsForDate,
 } from "@/lib/order/cart-schedule";
 import { availableTimeSlots, isDateAvailable, minSelectableDate } from "@/lib/order/schedule";
 import {
@@ -118,45 +120,19 @@ export function CheckoutFlow({
   const scheduleNotice = scheduleSuggestion
     ? scheduleNoticeForKind(scheduleSuggestion.kind, texts)
     : "";
+
+  const minScheduleDate =
+    scheduleSuggestion?.date ?? minSelectableDate(os.schedule);
+
+  const selectableTimeSlots = useMemo(
+    () => validCartTimeSlotsForDate(items, cms.products, os, draft.date),
+    [items, cms.products, os, draft.date],
+  );
   const strictestPrepLabel = strictestFulfillmentLabel(
     items,
     cms.products,
     PRODUCT_FULFILLMENT_LABELS,
   );
-
-  const advanceInput = useMemo(
-    () => ({
-      cartLines: toAdvanceCartLines(items),
-      date: draft.date,
-      timeSlotId: draft.timeSlotId,
-    }),
-    [items, draft.date, draft.timeSlotId],
-  );
-
-  const checkAdvanceClient = (): boolean => {
-    const result = validateOrderAdvanceLogic(os, cms.products, advanceInput, {
-      nowMs: Date.now(),
-      fallbackWhatsapp: cms.settings.whatsapp,
-    });
-    if (!result.valid) {
-      setAdvanceModal(result.modal);
-      return false;
-    }
-    return true;
-  };
-
-  const checkAdvanceServer = async (): Promise<boolean> => {
-    try {
-      const result = await validateOrderAdvance({ data: advanceInput });
-      if (!result.valid) {
-        setAdvanceModal(result.modal);
-        return false;
-      }
-      return true;
-    } catch {
-      return checkAdvanceClient();
-    }
-  };
 
   const resetCheckout = () => {
     setStep("cart");
@@ -211,6 +187,37 @@ export function CheckoutFlow({
       timeSlotId: scheduleSuggestion.timeSlotId,
     }));
   }, [open, scheduleSuggestion]);
+
+  useEffect(() => {
+    if (!open || step !== "schedule" || items.length === 0) return;
+    if (
+      isCartScheduleSelectionValid(items, cms.products, os, draft.date, draft.timeSlotId)
+    ) {
+      return;
+    }
+    if (scheduleManualRef.current) return;
+    if (!scheduleSuggestion) return;
+    setDraft((d) => ({
+      ...d,
+      date: scheduleSuggestion.date,
+      timeSlotId: scheduleSuggestion.timeSlotId,
+    }));
+  }, [open, step, items, cms.products, os, draft.date, draft.timeSlotId, scheduleSuggestion]);
+
+  useEffect(() => {
+    if (!open || step !== "schedule" || items.length === 0) return;
+    if (availableTimeSlots(os.schedule).length === 0) return;
+    if (selectableTimeSlots.length === 0) {
+      if (draft.timeSlotId !== null) {
+        setDraft((d) => ({ ...d, timeSlotId: null }));
+      }
+      return;
+    }
+    if (draft.timeSlotId && selectableTimeSlots.some((s) => s.id === draft.timeSlotId)) {
+      return;
+    }
+    setDraft((d) => ({ ...d, timeSlotId: selectableTimeSlots[0]!.id }));
+  }, [open, step, items, os, draft.date, draft.timeSlotId, selectableTimeSlots]);
 
   useEffect(() => {
     if (!submitError) return;
@@ -312,7 +319,46 @@ export function CheckoutFlow({
     setCouponError("");
     setSubmitError("");
     try {
-      const advanceOk = await checkAdvanceServer();
+      let submitDraft = orderDraft;
+      if (
+        !isCartScheduleSelectionValid(
+          items,
+          cms.products,
+          os,
+          submitDraft.date,
+          submitDraft.timeSlotId,
+        )
+      ) {
+        const fix = suggestCartSchedule(items, cms.products, os);
+        submitDraft = { ...submitDraft, date: fix.date, timeSlotId: fix.timeSlotId };
+        setDraft(submitDraft);
+      }
+
+      const advanceInputForSubmit = {
+        cartLines: toAdvanceCartLines(items),
+        date: submitDraft.date,
+        timeSlotId: submitDraft.timeSlotId,
+      };
+
+      let advanceOk = false;
+      try {
+        const result = await validateOrderAdvance({ data: advanceInputForSubmit });
+        if (result.valid) {
+          advanceOk = true;
+        } else {
+          setAdvanceModal(result.modal);
+        }
+      } catch {
+        const clientResult = validateOrderAdvanceLogic(os, cms.products, advanceInputForSubmit, {
+          nowMs: Date.now(),
+          fallbackWhatsapp: cms.settings.whatsapp,
+        });
+        if (clientResult.valid) {
+          advanceOk = true;
+        } else {
+          setAdvanceModal(clientResult.modal);
+        }
+      }
       if (!advanceOk) {
         setSubmitError("");
         return;
@@ -330,8 +376,8 @@ export function CheckoutFlow({
         }
       }
 
-      const label = paymentMethodLabel(os.paymentMethods, orderDraft.paymentMethodId);
-      const msg = buildOrderWhatsAppMessage(cms, items, orderDraft, label);
+      const label = paymentMethodLabel(os.paymentMethods, submitDraft.paymentMethodId);
+      const msg = buildOrderWhatsAppMessage(cms, items, submitDraft, label);
 
       let notifyResult: Awaited<ReturnType<typeof notifyOrderEvolution>>;
       try {
@@ -375,8 +421,30 @@ export function CheckoutFlow({
 
   const canProceedSchedule =
     Boolean(draft.date) &&
+    draft.date >= minScheduleDate &&
     isDateAvailable(draft.date, os.schedule) &&
-    (availableTimeSlots(os.schedule).length === 0 || draft.timeSlotId);
+    (availableTimeSlots(os.schedule).length === 0 || Boolean(draft.timeSlotId)) &&
+    isCartScheduleSelectionValid(items, cms.products, os, draft.date, draft.timeSlotId);
+
+  const proceedFromSchedule = () => {
+    if (!canProceedSchedule) {
+      let date = draft.date;
+      let timeSlotId = draft.timeSlotId;
+      if (
+        !isCartScheduleSelectionValid(items, cms.products, os, date, timeSlotId)
+      ) {
+        const fix = suggestCartSchedule(items, cms.products, os);
+        date = fix.date;
+        timeSlotId = fix.timeSlotId;
+        scheduleManualRef.current = false;
+        setDraft((d) => ({ ...d, date, timeSlotId }));
+      }
+      if (!isCartScheduleSelectionValid(items, cms.products, os, date, timeSlotId)) {
+        return;
+      }
+    }
+    goNext();
+  };
 
   return (
     <>
@@ -643,11 +711,23 @@ export function CheckoutFlow({
                 <input
                   type="date"
                   className={inputClass}
-                  min={minSelectableDate(os.schedule)}
+                  min={minScheduleDate}
                   value={draft.date}
                   onChange={(e) => {
                     scheduleManualRef.current = true;
-                    setDraft((d) => ({ ...d, date: e.target.value }));
+                    let nextDate = e.target.value;
+                    if (nextDate < minScheduleDate) nextDate = minScheduleDate;
+                    const slotsForDate = validCartTimeSlotsForDate(
+                      items,
+                      cms.products,
+                      os,
+                      nextDate,
+                    );
+                    const nextSlot =
+                      slotsForDate.find((s) => s.id === draft.timeSlotId)?.id ??
+                      slotsForDate[0]?.id ??
+                      null;
+                    setDraft((d) => ({ ...d, date: nextDate, timeSlotId: nextSlot }));
                   }}
                 />
               </Field>
@@ -659,8 +739,14 @@ export function CheckoutFlow({
                   <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
                     {texts.stepTime}
                   </div>
+                  {selectableTimeSlots.length === 0 ? (
+                    <p className="text-sm text-destructive">
+                      Nenhum horário atende ao prazo mínimo nesta data. Escolha uma data mais
+                      adiante.
+                    </p>
+                  ) : null}
                   <div className="grid gap-2">
-                    {availableTimeSlots(os.schedule).map((slot) => (
+                    {selectableTimeSlots.map((slot) => (
                       <button
                         key={slot.id}
                         type="button"
@@ -877,10 +963,7 @@ export function CheckoutFlow({
             <button
               type="button"
               disabled={!canProceedSchedule}
-              onClick={() => {
-                if (!checkAdvanceClient()) return;
-                goNext();
-              }}
+              onClick={proceedFromSchedule}
               className="w-full rounded-full bg-gold-gradient py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-primary-foreground disabled:opacity-50"
             >
               {texts.btnNext}

@@ -1,4 +1,4 @@
-import type { CmsOrderSettings, CmsProduct, ProductFulfillmentTag } from "@/lib/cms/types";
+import type { CmsOrderSettings, CmsProduct, CmsTimeSlot, ProductFulfillmentTag } from "@/lib/cms/types";
 import {
   cartRequiresAdvanceNotice,
   toAdvanceCartLines,
@@ -80,11 +80,59 @@ export function suggestCartSchedule(
     cursor = addDaysIso(cursor, 1);
   }
 
-  return {
-    date: minSelectableDate(schedule),
-    timeSlotId: slots[0]?.id ?? null,
-    kind,
-  };
+  return { date: maxDate, timeSlotId: slots[0]?.id ?? null, kind };
+}
+
+export function isCartScheduleSelectionValid(
+  items: CartLineItem[],
+  products: CmsProduct[],
+  orderSettings: CmsOrderSettings,
+  date: string,
+  timeSlotId: string | null,
+  nowMs = Date.now(),
+): boolean {
+  if (items.length === 0) return true;
+  return validateOrderAdvanceLogic(
+    orderSettings,
+    products,
+    { cartLines: toAdvanceCartLines(items), date, timeSlotId },
+    { nowMs },
+  ).valid;
+}
+
+/** Horários da loja que respeitam antecedência do carrinho na data escolhida. */
+export function validCartTimeSlotsForDate(
+  items: CartLineItem[],
+  products: CmsProduct[],
+  orderSettings: CmsOrderSettings,
+  dateIso: string,
+  nowMs = Date.now(),
+): CmsTimeSlot[] {
+  const schedule = orderSettings.schedule;
+  const slots = availableTimeSlots(schedule);
+  const cartLines = toAdvanceCartLines(items);
+  if (items.length === 0) return slots;
+
+  if (slots.length === 0) return [];
+
+  return slots.filter((slot) =>
+    validateOrderAdvanceLogic(
+      orderSettings,
+      products,
+      { cartLines, date: dateIso, timeSlotId: slot.id },
+      { nowMs },
+    ).valid,
+  );
+}
+
+export function earliestCartScheduleDate(
+  items: CartLineItem[],
+  products: CmsProduct[],
+  orderSettings: CmsOrderSettings,
+  nowMs = Date.now(),
+): string {
+  if (items.length === 0) return minSelectableDate(orderSettings.schedule);
+  return suggestCartSchedule(items, products, orderSettings, nowMs).date;
 }
 
 export function scheduleNoticeForKind(
