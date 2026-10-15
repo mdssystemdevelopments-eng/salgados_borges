@@ -58,6 +58,12 @@ export function createDefaultCheckoutTexts(): CmsCheckoutTexts {
     stepPickupInfo: "Retirada no local",
     stepDate: "Data desejada",
     stepTime: "Horário",
+    scheduleSuggestNoticeAllReady:
+      "Sugerimos a primeira data e horário que a loja atende. Você pode alterar abaixo se preferir outro momento.",
+    scheduleSuggestNoticeWithPrep:
+      "Seu pedido inclui itens que precisam de preparo. A data e o horário já vêm no primeiro momento em que conseguimos atender.",
+    scheduleSuggestNoticeMixed:
+      "Ajustamos data e horário conforme os produtos do carrinho. Confira abaixo e mude se precisar.",
     stepPayment: "Como você deseja pagar?",
     stepCustomer: "Seus dados",
     stepReview: "Confirme seu pedido",
@@ -78,9 +84,11 @@ export function createDefaultCheckoutTexts(): CmsCheckoutTexts {
     btnBack: "Voltar",
     btnNext: "Continuar",
     btnSendWhatsapp: "Fazer pedido",
-    orderSubmitSuccess: "Pedido enviado com sucesso!",
+    orderSubmitSuccess: "Pedido registrado",
     orderSubmitSuccessDetail:
-      "Aguarde! A {brand} recebeu seu pedido e em breve entrará em contato pelo WhatsApp para confirmar valores, entrega e pagamento.",
+      "Obrigado. A {brand} já recebeu seu pedido. Em breve entraremos em contato pelo WhatsApp para confirmar horário, entrega e pagamento.",
+    orderSubmitSuccessFollowUp:
+      "Pode fechar esta tela. Não é preciso enviar nada de novo pelo WhatsApp.",
     orderSubmitFailed:
       "Não foi possível enviar o pedido agora. Verifique sua conexão e tente novamente, ou use os botões de contato do site.",
     orderSubmitFailedNotConfigured:

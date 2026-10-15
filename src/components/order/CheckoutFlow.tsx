@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { redeemCoupon, validateCoupon } from "@/lib/cms/coupon-api";
-import { PREP_METHOD_LABELS } from "@/lib/cms/order-defaults";
+import { PREP_METHOD_LABELS, PRODUCT_FULFILLMENT_LABELS } from "@/lib/cms/order-defaults";
 import type { CmsData } from "@/lib/cms/types";
 import {
   toAdvanceCartLines,
@@ -10,6 +10,11 @@ import {
 } from "@/lib/order/advance";
 import { notifyOrderEvolution, validateOrderAdvance } from "@/lib/order/order-api";
 import { lineUnitPrice, orderTotals } from "@/lib/order/pricing";
+import {
+  scheduleNoticeForKind,
+  strictestFulfillmentLabel,
+  suggestCartSchedule,
+} from "@/lib/order/cart-schedule";
 import { availableTimeSlots, isDateAvailable, minSelectableDate } from "@/lib/order/schedule";
 import {
   buildOrderWhatsAppMessage,
@@ -98,6 +103,26 @@ export function CheckoutFlow({
   const [submitError, setSubmitError] = useState("");
   const [advanceModal, setAdvanceModal] = useState<OrderAdvanceModalContent | null>(null);
   const submitFeedbackRef = useRef<HTMLDivElement | null>(null);
+  const scheduleManualRef = useRef(false);
+
+  const cartScheduleKey = useMemo(
+    () => items.map((i) => `${i.product.id}:${i.qty}:${i.gramOptionId ?? ""}`).join("|"),
+    [items],
+  );
+
+  const scheduleSuggestion = useMemo(() => {
+    if (items.length === 0) return null;
+    return suggestCartSchedule(items, cms.products, os);
+  }, [items, cms.products, os]);
+
+  const scheduleNotice = scheduleSuggestion
+    ? scheduleNoticeForKind(scheduleSuggestion.kind, texts)
+    : "";
+  const strictestPrepLabel = strictestFulfillmentLabel(
+    items,
+    cms.products,
+    PRODUCT_FULFILLMENT_LABELS,
+  );
 
   const advanceInput = useMemo(
     () => ({
@@ -142,6 +167,7 @@ export function CheckoutFlow({
     setSubmitting(false);
     setSubmitError("");
     setAdvanceModal(null);
+    scheduleManualRef.current = false;
   };
 
   const checkoutPhone = resolveCheckoutPhone(draft);
@@ -172,6 +198,19 @@ export function CheckoutFlow({
       cancelled = true;
     };
   }, [draft.coupon, checkoutPhone, items, totals.subtotal]);
+
+  useEffect(() => {
+    scheduleManualRef.current = false;
+  }, [cartScheduleKey]);
+
+  useEffect(() => {
+    if (!open || !scheduleSuggestion || scheduleManualRef.current) return;
+    setDraft((d) => ({
+      ...d,
+      date: scheduleSuggestion.date,
+      timeSlotId: scheduleSuggestion.timeSlotId,
+    }));
+  }, [open, scheduleSuggestion]);
 
   useEffect(() => {
     if (!submitError) return;
@@ -592,13 +631,24 @@ export function CheckoutFlow({
 
           {step === "schedule" ? (
             <div className="space-y-4">
+              {scheduleNotice ? (
+                <p className="rounded-lg border border-border bg-surface px-3 py-2.5 text-sm leading-relaxed text-muted-foreground">
+                  {scheduleNotice}
+                  {strictestPrepLabel
+                    ? ` Há produtos sinalizados como ${strictestPrepLabel}.`
+                    : ""}
+                </p>
+              ) : null}
               <Field label={texts.stepDate}>
                 <input
                   type="date"
                   className={inputClass}
                   min={minSelectableDate(os.schedule)}
                   value={draft.date}
-                  onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
+                  onChange={(e) => {
+                    scheduleManualRef.current = true;
+                    setDraft((d) => ({ ...d, date: e.target.value }));
+                  }}
                 />
               </Field>
               {!isDateAvailable(draft.date, os.schedule) ? (
@@ -614,7 +664,10 @@ export function CheckoutFlow({
                       <button
                         key={slot.id}
                         type="button"
-                        onClick={() => setDraft((d) => ({ ...d, timeSlotId: slot.id }))}
+                        onClick={() => {
+                          scheduleManualRef.current = true;
+                          setDraft((d) => ({ ...d, timeSlotId: slot.id }));
+                        }}
                         className={`rounded-lg border px-4 py-3 text-left text-sm ${
                           draft.timeSlotId === slot.id ? "border-gold bg-gold/5" : "border-border"
                         }`}
@@ -768,6 +821,11 @@ export function CheckoutFlow({
               <p className="text-sm leading-relaxed text-foreground/90">
                 {texts.orderSubmitSuccessDetail.replace(/\{brand\}/g, cms.content.brandName)}
               </p>
+              {texts.orderSubmitSuccessFollowUp ? (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {texts.orderSubmitSuccessFollowUp}
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>

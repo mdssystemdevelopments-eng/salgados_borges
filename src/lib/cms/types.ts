@@ -204,6 +204,9 @@ export type CmsCheckoutTexts = {
   stepPickupInfo: string;
   stepDate: string;
   stepTime: string;
+  scheduleSuggestNoticeAllReady: string;
+  scheduleSuggestNoticeWithPrep: string;
+  scheduleSuggestNoticeMixed: string;
   stepPayment: string;
   stepCustomer: string;
   stepReview: string;
@@ -226,6 +229,7 @@ export type CmsCheckoutTexts = {
   btnSendWhatsapp: string;
   orderSubmitSuccess: string;
   orderSubmitSuccessDetail: string;
+  orderSubmitSuccessFollowUp: string;
   orderSubmitFailed: string;
   orderSubmitFailedNotConfigured: string;
   orderSubmitFailedApi: string;

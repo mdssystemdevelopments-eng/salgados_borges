@@ -84,8 +84,10 @@ export function getEffectiveProductPrice(
 
 const LEGACY_BTN_SEND_WHATSAPP = "Enviar pedido pelo WhatsApp";
 const LEGACY_ORDER_SUCCESS = "Pedido enviado!";
-const LEGACY_ORDER_SUCCESS_DETAIL =
-  "Recebemos seu pedido. Em breve a salgaderia entrará em contato pelo WhatsApp para confirmar.";
+const LEGACY_ORDER_SUCCESS_DETAILS = [
+  "Recebemos seu pedido. Em breve a salgaderia entrará em contato pelo WhatsApp para confirmar.",
+  "Aguarde! A {brand} recebeu seu pedido e em breve entrará em contato pelo WhatsApp para confirmar valores, entrega e pagamento.",
+];
 
 function mergeCheckoutTexts(partial?: Partial<CmsCheckoutTexts>): CmsCheckoutTexts {
   const defaults = createDefaultCheckoutTexts();
@@ -95,12 +97,25 @@ function mergeCheckoutTexts(partial?: Partial<CmsCheckoutTexts>): CmsCheckoutTex
   }
   if (
     merged.orderSubmitSuccess === LEGACY_ORDER_SUCCESS ||
-    merged.orderSubmitSuccess === "Pedido enviado!"
+    merged.orderSubmitSuccess === "Pedido enviado!" ||
+    merged.orderSubmitSuccess === "Pedido enviado com sucesso!"
   ) {
     merged.orderSubmitSuccess = defaults.orderSubmitSuccess;
   }
-  if (merged.orderSubmitSuccessDetail === LEGACY_ORDER_SUCCESS_DETAIL) {
+  if (LEGACY_ORDER_SUCCESS_DETAILS.includes(merged.orderSubmitSuccessDetail)) {
     merged.orderSubmitSuccessDetail = defaults.orderSubmitSuccessDetail;
+  }
+  if (!merged.orderSubmitSuccessFollowUp?.trim()) {
+    merged.orderSubmitSuccessFollowUp = defaults.orderSubmitSuccessFollowUp;
+  }
+  if (!merged.scheduleSuggestNoticeAllReady?.trim()) {
+    merged.scheduleSuggestNoticeAllReady = defaults.scheduleSuggestNoticeAllReady;
+  }
+  if (!merged.scheduleSuggestNoticeWithPrep?.trim()) {
+    merged.scheduleSuggestNoticeWithPrep = defaults.scheduleSuggestNoticeWithPrep;
+  }
+  if (!merged.scheduleSuggestNoticeMixed?.trim()) {
+    merged.scheduleSuggestNoticeMixed = defaults.scheduleSuggestNoticeMixed;
   }
   return merged;
 }

@@ -75,6 +75,28 @@ export function cartRequiresAdvanceNotice(
   return false;
 }
 
+/** Horas mínimas conforme a etiqueta mais exigente do carrinho. */
+export function minimumAdvanceHoursForCart(
+  cartLines: OrderAdvanceCartLine[],
+  products: CmsProduct[],
+  advance: CmsOrderAdvanceSettings,
+): number {
+  if (!advance.enabled || !cartRequiresAdvanceNotice(cartLines, products)) return 0;
+
+  let hours = advance.minimumAdvanceHours;
+  const map = new Map(products.map((p) => [p.id, p]));
+
+  for (const line of cartLines) {
+    const tag = map.get(line.productId)?.fulfillmentTag;
+    if (!tag || tag === "pronta_entrega") continue;
+    if (tag === "encomenda_24h") hours = Math.max(hours, 24);
+    else if (tag === "encomenda_48h") hours = Math.max(hours, 48);
+    else hours = Math.max(hours, advance.minimumAdvanceHours);
+  }
+
+  return hours;
+}
+
 function getTimezoneOffsetMs(utcMs: number, timeZone: string): number {
   const date = new Date(utcMs);
   const utcParts = new Intl.DateTimeFormat("en-US", {
@@ -249,7 +271,8 @@ export function validateOrderAdvanceLogic(
     };
   }
 
-  const minimumUtcMs = nowMs + advance.minimumAdvanceHours * MS_PER_HOUR;
+  const minimumHours = minimumAdvanceHoursForCart(cartLines, products, advance);
+  const minimumUtcMs = nowMs + minimumHours * MS_PER_HOUR;
   if (selectedUtcMs < minimumUtcMs) {
     const selectedTime = resolveSelectedTimeLabel(
       input.timeSlotId,
@@ -257,7 +280,7 @@ export function validateOrderAdvanceLogic(
       slotStart,
     );
     const ctx: OrderAdvancePlaceholderContext = {
-      minimumHours: advance.minimumAdvanceHours,
+      minimumHours,
       selectedDate: formatDateBr(input.date),
       selectedTime,
     };
