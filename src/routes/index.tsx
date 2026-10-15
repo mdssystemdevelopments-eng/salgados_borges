@@ -227,7 +227,6 @@ function SalgadosBorgesPage() {
         onClose={() => setCartOpen(false)}
         onOrderComplete={() => {
           setCart([]);
-          setCartOpen(false);
         }}
         cms={cms}
         items={cart}

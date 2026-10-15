@@ -261,7 +261,7 @@ export function CheckoutFlow({
   };
   const goBack = () => setStep(steps[Math.max(stepIndex - 1, 0)]);
 
-  if (!open) return null;
+  if (!open && step !== "success") return null;
 
   const applyCoupon = async () => {
     setCouponLoading(true);
@@ -407,6 +407,7 @@ export function CheckoutFlow({
       onClearCart();
       onOrderComplete?.();
       setStep("success");
+      setSubmitError("");
     } catch {
       setSubmitError(texts.orderSubmitFailed);
     } finally {

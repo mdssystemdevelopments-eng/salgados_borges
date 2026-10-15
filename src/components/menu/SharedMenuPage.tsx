@@ -77,7 +77,6 @@ export function SharedMenuPage({ cms, menuLink }: SharedMenuPageProps) {
 
   const handleOrderComplete = () => {
     setCart([]);
-    setCartOpen(false);
   };
 
   return (
